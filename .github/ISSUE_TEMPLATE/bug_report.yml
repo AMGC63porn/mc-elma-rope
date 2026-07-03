@@ -1,0 +1,48 @@
+name: Bug report
+description: Report a problem with MC-ELMA Rope.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing MC-ELMA Rope. Please include enough detail to reproduce the issue on a Fabric server.
+  - type: input
+    id: minecraft-version
+    attributes:
+      label: Minecraft version
+      placeholder: "1.21.10"
+    validations:
+      required: true
+  - type: input
+    id: fabric-api-version
+    attributes:
+      label: Fabric API version
+      placeholder: "0.138.4+1.21.10"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the shortest steps that trigger the issue.
+      placeholder: |
+        1. Start a dedicated server...
+        2. Bind player A to player B...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Paste relevant server or client logs.
+      render: text
