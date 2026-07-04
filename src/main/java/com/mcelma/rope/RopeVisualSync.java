@@ -50,7 +50,12 @@ public final class RopeVisualSync {
             Optional<RopeVisualPayload.VisualEndpoint> first = visualEndpoint(server, link.first());
             Optional<RopeVisualPayload.VisualEndpoint> second = visualEndpoint(server, link.second());
             if (first.isPresent() && second.isPresent()) {
-                visualLinks.add(new RopeVisualPayload.VisualLink(link.id(), first.get(), second.get()));
+                visualLinks.add(new RopeVisualPayload.VisualLink(
+                        link.id(),
+                        link.length(),
+                        link.isTaut(),
+                        first.get(),
+                        second.get()));
             }
         }
         return visualLinks;
@@ -73,7 +78,7 @@ public final class RopeVisualSync {
             MinecraftServer server,
             RopeEndpoint endpoint) {
         if (endpoint.type() == RopeEndpoint.Type.ANCHOR) {
-            return Optional.of(RopeVisualPayload.VisualEndpoint.anchor(endpoint.anchorPosition()));
+            return Optional.of(RopeVisualPayload.VisualEndpoint.anchor(endpoint.anchorPosition().add(0.0D, 0.18D, 0.0D)));
         }
 
         return endpoint.resolvePlayer(server)

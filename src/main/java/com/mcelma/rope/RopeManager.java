@@ -23,8 +23,16 @@ public final class RopeManager {
         Iterator<RopeLink> iterator = activeLinks.iterator();
         while (iterator.hasNext()) {
             RopeLink link = iterator.next();
+            link.tickAge();
+            if (shouldExpire(link, server)) {
+                iterator.remove();
+                log("Auto-cleared expired rope {}", link.id());
+                notifyExpiration(server, link);
+                continue;
+            }
             if (!RopePhysics.tick(server, link)) {
                 iterator.remove();
+                log("Auto-cleared invalid rope {}", link.id());
             }
         }
     }
@@ -32,6 +40,9 @@ public final class RopeManager {
     public AddResult addAnchor(ServerPlayerEntity player, Vec3d anchor, double length) {
         if (activeLinks.size() >= RopeConfig.maxActiveLinks()) {
             return AddResult.FULL;
+        }
+        if (RopeConfig.isProtectedPlayer(player)) {
+            return AddResult.PROTECTED_PLAYER;
         }
 
         removeForPlayer(player.getUuid());
@@ -61,6 +72,9 @@ public final class RopeManager {
         if (activeLinks.size() >= RopeConfig.maxActiveLinks()) {
             return AddResult.FULL;
         }
+        if (RopeConfig.isProtectedPlayer(first) || RopeConfig.isProtectedPlayer(second)) {
+            return AddResult.PROTECTED_PLAYER;
+        }
         if (hasLink(first.getUuid())) {
             return AddResult.FIRST_ALREADY_LINKED;
         }
@@ -74,6 +88,8 @@ public final class RopeManager {
                 RopeEndpoint.player(second),
                 length,
                 refundLeadOnManualRelease));
+        log("Added player rope {} -> {} length {}", first.getName().getString(), second.getName().getString(),
+                RopeConfig.clampLength(length));
         return AddResult.ADDED;
     }
 
@@ -112,6 +128,7 @@ public final class RopeManager {
                 RopeEndpoint.anchor(carrier.getEntityWorld().getRegistryKey(), anchor),
                 RopeConfig.anchorRopeLength(),
                 current.refundLeadOnManualRelease()));
+        log("Anchored rope controlled by {} at {}", carrier.getName().getString(), anchor);
         return AddResult.ADDED;
     }
 
@@ -127,6 +144,7 @@ public final class RopeManager {
         }
 
         activeLinks.remove(current);
+        log("Released player rope {}", current.id());
         return ReleaseResult.released(current);
     }
 
@@ -142,18 +160,26 @@ public final class RopeManager {
         }
 
         activeLinks.remove(current);
+        log("Released anchor rope {}", current.id());
         return ReleaseResult.released(current);
     }
 
     public int removeForPlayer(UUID playerUuid) {
         int before = activeLinks.size();
         activeLinks.removeIf(link -> link.includesPlayer(playerUuid));
-        return before - activeLinks.size();
+        int removed = before - activeLinks.size();
+        if (removed > 0) {
+            log("Removed {} rope link(s) for player {}", removed, playerUuid);
+        }
+        return removed;
     }
 
     public int clearAll() {
         int count = activeLinks.size();
         activeLinks.clear();
+        if (count > 0) {
+            log("Cleared all rope links: {}", count);
+        }
         return count;
     }
 
@@ -163,6 +189,7 @@ public final class RopeManager {
             RopeLink link = iterator.next();
             if (link.id().equals(linkId)) {
                 iterator.remove();
+                log("Removed rope by id {}", linkId);
                 return Optional.of(link);
             }
         }
@@ -175,10 +202,43 @@ public final class RopeManager {
             RopeLink link = iterator.next();
             if (link.controllerUuid().equals(controllerUuid) && link.hasOnlyPlayerEndpoints()) {
                 iterator.remove();
+                log("Dropped controlled player rope {}", link.id());
                 return Optional.of(link);
             }
         }
         return Optional.empty();
+    }
+
+    private static boolean shouldExpire(RopeLink link, MinecraftServer server) {
+        int maxHeldDurationTicks = RopeConfig.maxHeldDurationTicks();
+        if (maxHeldDurationTicks <= 0 || link.ageTicks() < maxHeldDurationTicks) {
+            return false;
+        }
+        return link.hasOnlyPlayerEndpoints() || hasOnlinePlayerEndpoint(server, link);
+    }
+
+    private static boolean hasOnlinePlayerEndpoint(MinecraftServer server, RopeLink link) {
+        return link.first().type() == RopeEndpoint.Type.PLAYER && link.first().resolvePlayer(server).isPresent()
+                || link.second().type() == RopeEndpoint.Type.PLAYER && link.second().resolvePlayer(server).isPresent();
+    }
+
+    private static void notifyExpiration(MinecraftServer server, RopeLink link) {
+        notifyEndpoint(server, link.first(), "The rope was released automatically.");
+        notifyEndpoint(server, link.second(), "The rope was released automatically.");
+    }
+
+    private static void notifyEndpoint(MinecraftServer server, RopeEndpoint endpoint, String message) {
+        if (endpoint.type() == RopeEndpoint.Type.PLAYER) {
+            endpoint.resolvePlayer(server).ifPresent(player -> player.sendMessage(
+                    net.minecraft.text.Text.literal(message),
+                    true));
+        }
+    }
+
+    private static void log(String message, Object... args) {
+        if (RopeConfig.logRopeEvents()) {
+            McElmaRopeMod.LOGGER.info(message, args);
+        }
     }
 
     public int activeCount() {
@@ -219,7 +279,8 @@ public final class RopeManager {
         SECOND_ALREADY_LINKED,
         NO_LINK,
         NOT_CONTROLLER,
-        NO_CARRIED_PLAYER
+        NO_CARRIED_PLAYER,
+        PROTECTED_PLAYER
     }
 
     public enum ReleaseStatus {

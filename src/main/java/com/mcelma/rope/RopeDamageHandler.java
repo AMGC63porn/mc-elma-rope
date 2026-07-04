@@ -46,6 +46,11 @@ public final class RopeDamageHandler {
             holder.dropItem(new ItemStack(Items.LEAD), false);
         }
 
+        if (RopeConfig.logRopeEvents()) {
+            McElmaRopeMod.LOGGER.info("Holder damage dropped rope {} controlled by {}",
+                    link.id(),
+                    holder.getName().getString());
+        }
         holder.sendMessage(Text.literal("The rope slipped from your hand."), true);
         notifyOtherEndpoint(holder.getEntityWorld().getServer(), holder, link);
     }

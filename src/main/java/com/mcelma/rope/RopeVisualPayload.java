@@ -33,6 +33,8 @@ public record RopeVisualPayload(List<VisualLink> links) implements CustomPayload
         for (int index = 0; index < count; index++) {
             VisualLink link = payload.links.get(index);
             buf.writeUuid(link.id());
+            buf.writeDouble(link.length());
+            buf.writeBoolean(link.taut());
             writeEndpoint(buf, link.first());
             writeEndpoint(buf, link.second());
         }
@@ -42,7 +44,7 @@ public record RopeVisualPayload(List<VisualLink> links) implements CustomPayload
         int count = Math.min(buf.readVarInt(), MAX_VISUAL_LINKS);
         List<VisualLink> links = new ArrayList<>(count);
         for (int index = 0; index < count; index++) {
-            links.add(new VisualLink(buf.readUuid(), readEndpoint(buf), readEndpoint(buf)));
+            links.add(new VisualLink(buf.readUuid(), buf.readDouble(), buf.readBoolean(), readEndpoint(buf), readEndpoint(buf)));
         }
         return new RopeVisualPayload(links);
     }
@@ -63,7 +65,7 @@ public record RopeVisualPayload(List<VisualLink> links) implements CustomPayload
         return VisualEndpoint.anchor(buf.readVec3d());
     }
 
-    public record VisualLink(UUID id, VisualEndpoint first, VisualEndpoint second) {
+    public record VisualLink(UUID id, double length, boolean taut, VisualEndpoint first, VisualEndpoint second) {
     }
 
     public record VisualEndpoint(boolean player, int entityId, Vec3d anchorPos) {

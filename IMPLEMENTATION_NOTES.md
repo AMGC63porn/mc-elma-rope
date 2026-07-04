@@ -28,20 +28,24 @@ leads are used as the player interaction item.
   and the tied player cannot pull the controller through rope forces.
 - Rope visuals are synced through an optional S2C payload. The server sends
   packets only to clients that advertise the visual payload channel.
+- Rope visuals include length and taut state for client-side sag/interpolation
+  only; gameplay remains server-authoritative.
 - Anchor blocks are configurable by block id or block tag.
+- Protected player lists, optional spawn protection, optional max held duration,
+  and rope event logging are configurable moderation controls.
 - Rope links are removed when a player disconnects, dies, becomes spectator, or
   leaves the rope endpoint world. Automatic removal does not refund leads.
 
 ## Build Verification
 
 - Built successfully with Eclipse Adoptium JDK 21.0.11 and Gradle 9.6.1.
-- The release jar is copied to `fabric-mod-dev/release/mc_elma_rope-0.1.0.jar`.
+- The release jar is copied to `fabric-mod-dev/release/mc_elma_rope-0.2.0.jar`.
 
 ## Follow-Up Candidates
 
 - Config UI.
 - Saved rope state.
-- Thicker or textured rope renderer.
+- Textured rope renderer.
 - Command suggestions and richer admin feedback.
 - Dedicated MC-ELMA test server validation with the full modpack.
 - GameTest coverage for rope lifecycle and config behavior.

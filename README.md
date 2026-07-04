@@ -22,7 +22,10 @@ rope visual renderer.
 - Give tied players a difficult, low-chance self-escape attempt.
 - Let a rope slip free at a configurable low chance when the holder takes
   damage.
-- Render active ropes on clients that also install the mod.
+- Render active ropes on clients that also install the mod, with smoothed
+  endpoint interpolation, configurable sag, and a thicker layered rope look.
+- Protect selected players and optionally disable binding near spawn.
+- Log rope lifecycle events for moderation when enabled.
 - Keep all core state server-side and tick only active rope links.
 
 ## Requirements
@@ -73,8 +76,11 @@ Admin commands are intended for testing, moderation, and emergency cleanup.
 /mcelmarope anchor <player> <x> <y> <z> <length>
 /mcelmarope bind <playerA> <playerB> <length>
 /mcelmarope clear <player|all>
+/mcelmarope clearall
 /mcelmarope status <player>
+/mcelmarope inspect <player>
 /mcelmarope list
+/mcelmarope config
 /mcelmarope reload
 ```
 
@@ -95,6 +101,20 @@ Important defaults:
 - `selfEscapeSuccessDenominator`: `300`
 - `enableHolderDamageDrop`: `true`
 - `holderDamageDropDenominator`: `100`
+- `ropePhysicsPreset`: `custom` (`custom`, `soft`, `balanced`, `strict`)
+- `commandPermissionLevel`: `2`
+- `maxActiveLinks`: `256`
+- `maxHeldDurationTicks`: `0` (`0` means disabled)
+- `spawnProtectionRadius`: `0.0`
+- `protectedPlayerNames`: `[]`
+- `protectedPlayerIds`: `[]`
+- `logRopeEvents`: `true`
+- `persistRopes`: `false`
+- `enableActionFeedbackEffects`: `true`
+- `ropeVisualEnabled`: `true`
+- `ropeVisualSegments`: `20`
+- `ropeVisualSag`: `0.045`
+- `ropeVisualWidthPreset`: `balanced`
 
 Anchor entries support block ids and block tags:
 
@@ -140,7 +160,7 @@ JDK 21 is required. Use the included Gradle wrapper:
 Successful builds copy the remapped mod jar into the workspace release folder:
 
 ```text
-fabric-mod-dev/release/mc_elma_rope-0.1.0.jar
+fabric-mod-dev/release/mc_elma_rope-0.2.0.jar
 ```
 
 ## License

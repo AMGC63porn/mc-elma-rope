@@ -8,9 +8,11 @@ import java.util.UUID;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -43,7 +45,7 @@ public final class RopeActionManager {
             ServerPlayerEntity actor = server.getPlayerManager().getPlayer(action.actorUuid);
             if (actor == null || !isUsable(actor) || !isStillValid(server, actor, action)) {
                 if (actor != null) {
-                    actor.sendMessage(Text.literal("Rope action canceled."), true);
+                    actor.sendMessage(Text.literal("Rope action canceled: keep the right hand, distance, and aim."), true);
                 }
                 iterator.remove();
                 applyActionCooldown(action);
@@ -72,6 +74,12 @@ public final class RopeActionManager {
         if (!withinStartDistance(actor, target.getEyePos())) {
             return fail(actor, "That player is too far away.");
         }
+        if (RopeConfig.isProtectedPlayer(actor) || RopeConfig.isProtectedPlayer(target)) {
+            return fail(actor, "That player is protected from rope binding.");
+        }
+        if (isInSpawnProtection(actor) || isInSpawnProtection(target)) {
+            return fail(actor, "Rope binding is disabled near spawn.");
+        }
         if (ropeManager.hasLink(actor.getUuid())) {
             return fail(actor, "You are already tied and cannot bind another player.");
         }
@@ -88,7 +96,7 @@ public final class RopeActionManager {
                 RequiredHand.LEAD,
                 false);
         actions.put(actor.getUuid(), action);
-        actor.sendMessage(Text.literal("Keep looking at " + target.getName().getString() + " to tie them."), true);
+        actor.sendMessage(Text.literal("Tying " + target.getName().getString() + ". Keep looking."), true);
         return ActionResult.SUCCESS;
     }
 
@@ -128,7 +136,7 @@ public final class RopeActionManager {
                 hand,
                 false);
         actions.put(actor.getUuid(), action);
-        actor.sendMessage(Text.literal("Keep looking at the anchor to tie the rope."), true);
+        actor.sendMessage(Text.literal("Tying rope to anchor. Keep looking."), true);
         return ActionResult.SUCCESS;
     }
 
@@ -280,6 +288,10 @@ public final class RopeActionManager {
         return target != null
                 && isUsable(target)
                 && sameWorld(actor, target)
+                && !RopeConfig.isProtectedPlayer(actor)
+                && !RopeConfig.isProtectedPlayer(target)
+                && !isInSpawnProtection(actor)
+                && !isInSpawnProtection(target)
                 && !ropeManager.hasLink(actor.getUuid())
                 && !ropeManager.hasLink(target.getUuid())
                 && canMaintain(actor, target.getEyePos());
@@ -368,7 +380,10 @@ public final class RopeActionManager {
         }
 
         consumeLead(actor);
-        actor.sendMessage(Text.literal("Tied " + target.getName().getString() + "."), true);
+        feedback(actor, Feedback.SUCCESS);
+        feedback(target, Feedback.NOTICE);
+        log("Lead bind completed: {} tied {}", actor.getName().getString(), target.getName().getString());
+        actor.sendMessage(Text.literal("Rope secured: " + target.getName().getString() + "."), true);
         target.sendMessage(Text.literal("You have been tied by " + actor.getName().getString() + "."), true);
     }
 
@@ -379,6 +394,8 @@ public final class RopeActionManager {
             return;
         }
 
+        feedback(actor, Feedback.SUCCESS);
+        log("Anchor bind completed by {}", actor.getName().getString());
         actor.sendMessage(Text.literal("Tied the rope to the anchor."), true);
     }
 
@@ -390,6 +407,9 @@ public final class RopeActionManager {
         }
 
         refundLead(actor, removed.get());
+        feedback(actor, Feedback.SUCCESS);
+        notifyReleasedEndpoint(actor.getEntityWorld().getServer(), actor, removed.get(), action.thirdPartyRelease);
+        log("{} released rope {}", actor.getName().getString(), removed.get().id());
         String message = action.thirdPartyRelease
                 ? "Released the rope after a careful rescue."
                 : "Released the rope.";
@@ -406,6 +426,8 @@ public final class RopeActionManager {
         applySelfEscapeCooldown(actor.getUuid());
         int denominator = RopeConfig.selfEscapeSuccessDenominator();
         if (actor.getRandom().nextInt(denominator) != 0) {
+            feedback(actor, Feedback.FAIL);
+            log("Self escape failed for {} on rope {}", actor.getName().getString(), action.linkId);
             actor.sendMessage(Text.literal("You failed to loosen the rope."), true);
             return;
         }
@@ -416,6 +438,8 @@ public final class RopeActionManager {
             return;
         }
 
+        feedback(actor, Feedback.SUCCESS);
+        log("Self escape succeeded for {} on rope {}", actor.getName().getString(), action.linkId);
         actor.sendMessage(Text.literal("You slipped free from the rope."), true);
     }
 
@@ -440,6 +464,17 @@ public final class RopeActionManager {
 
     private boolean withinStartDistance(ServerPlayerEntity actor, Vec3d target) {
         return actor.getEyePos().squaredDistanceTo(target) <= square(RopeConfig.maxStartDistance());
+    }
+
+    private static boolean isInSpawnProtection(ServerPlayerEntity player) {
+        double radius = RopeConfig.spawnProtectionRadius();
+        if (radius <= 0.0D) {
+            return false;
+        }
+
+        ServerWorld world = player.getEntityWorld();
+        Vec3d spawn = Vec3d.ofCenter(world.getSpawnPoint().getPos());
+        return player.getEntityPos().squaredDistanceTo(spawn) <= square(radius);
     }
 
     private boolean canMaintain(ServerPlayerEntity actor, Vec3d target) {
@@ -563,6 +598,78 @@ public final class RopeActionManager {
         return ActionResult.FAIL;
     }
 
+    private static void feedback(ServerPlayerEntity player, Feedback feedback) {
+        if (!RopeConfig.enableActionFeedbackEffects()) {
+            return;
+        }
+
+        ServerWorld world = player.getEntityWorld();
+        Vec3d position = player.getEyePos().add(0.0D, 0.15D, 0.0D);
+        switch (feedback) {
+            case SUCCESS -> world.spawnParticles(
+                    ParticleTypes.HAPPY_VILLAGER,
+                    position.x,
+                    position.y,
+                    position.z,
+                    3,
+                    0.15D,
+                    0.1D,
+                    0.15D,
+                    0.01D);
+            case FAIL -> world.spawnParticles(
+                    ParticleTypes.SMOKE,
+                    position.x,
+                    position.y,
+                    position.z,
+                    2,
+                    0.08D,
+                    0.08D,
+                    0.08D,
+                    0.005D);
+            case NOTICE -> world.spawnParticles(
+                    ParticleTypes.CRIT,
+                    position.x,
+                    position.y,
+                    position.z,
+                    2,
+                    0.08D,
+                    0.08D,
+                    0.08D,
+                    0.005D);
+        }
+    }
+
+    private static void notifyReleasedEndpoint(
+            MinecraftServer server,
+            ServerPlayerEntity actor,
+            RopeLink link,
+            boolean thirdPartyRelease) {
+        RopeEndpoint target = link.otherEndpoint(actor.getUuid());
+        if (target == null || target.type() != RopeEndpoint.Type.PLAYER) {
+            target = link.first().type() == RopeEndpoint.Type.PLAYER ? link.first() : link.second();
+        }
+        if (target == null || target.type() != RopeEndpoint.Type.PLAYER) {
+            return;
+        }
+
+        RopeEndpoint endpoint = target;
+        endpoint.resolvePlayer(server).ifPresent(player -> {
+            if (player.getUuid().equals(actor.getUuid())) {
+                return;
+            }
+            String message = thirdPartyRelease
+                    ? actor.getName().getString() + " rescued you from the rope."
+                    : "The rope was released.";
+            player.sendMessage(Text.literal(message), true);
+        });
+    }
+
+    private static void log(String message, Object... args) {
+        if (RopeConfig.logRopeEvents()) {
+            McElmaRopeMod.LOGGER.info(message, args);
+        }
+    }
+
     private static Text messageFor(RopeManager.AddResult result) {
         return switch (result) {
             case FULL -> Text.literal("Rope limit reached.");
@@ -573,8 +680,15 @@ public final class RopeActionManager {
             case NO_LINK -> Text.literal("No rope link found.");
             case NOT_CONTROLLER -> Text.literal("Only the player leading this rope can do that.");
             case NO_CARRIED_PLAYER -> Text.literal("No carried player found.");
+            case PROTECTED_PLAYER -> Text.literal("That player is protected from rope binding.");
             case ADDED -> Text.literal("Rope added.");
         };
+    }
+
+    private enum Feedback {
+        SUCCESS,
+        FAIL,
+        NOTICE
     }
 
     public enum RequiredHand {

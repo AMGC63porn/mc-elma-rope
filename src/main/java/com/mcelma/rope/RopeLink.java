@@ -10,6 +10,7 @@ public final class RopeLink {
     private final double length;
     private final boolean refundLeadOnManualRelease;
     private boolean taut;
+    private int ageTicks;
 
     public RopeLink(UUID controllerUuid, RopeEndpoint first, RopeEndpoint second, double length) {
         this(controllerUuid, first, second, length, false);
@@ -59,6 +60,14 @@ public final class RopeLink {
 
     public void setTaut(boolean taut) {
         this.taut = taut;
+    }
+
+    public int ageTicks() {
+        return ageTicks;
+    }
+
+    public void tickAge() {
+        ageTicks++;
     }
 
     public boolean includesPlayer(UUID playerUuid) {

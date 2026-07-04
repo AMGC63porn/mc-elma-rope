@@ -53,12 +53,20 @@ public final class RopeCommands {
                         .then(argument("player", EntityArgumentType.player())
                                 .executes(context -> clearPlayer(ropeManager, context.getSource(),
                                         EntityArgumentType.getPlayer(context, "player")))))
+                .then(literal("clearall")
+                        .executes(context -> clearAll(ropeManager, context.getSource())))
                 .then(literal("status")
                         .then(argument("player", EntityArgumentType.player())
                                 .executes(context -> status(ropeManager, context.getSource(),
                                         EntityArgumentType.getPlayer(context, "player")))))
+                .then(literal("inspect")
+                        .then(argument("player", EntityArgumentType.player())
+                                .executes(context -> inspect(ropeManager, context.getSource(),
+                                        EntityArgumentType.getPlayer(context, "player")))))
                 .then(literal("list")
                         .executes(context -> list(ropeManager, context.getSource())))
+                .then(literal("config")
+                        .executes(context -> config(context.getSource())))
                 .then(literal("reload")
                         .executes(context -> reloadConfig(context.getSource())));
     }
@@ -131,6 +139,24 @@ public final class RopeCommands {
         return 1;
     }
 
+    private static int inspect(RopeManager ropeManager, ServerCommandSource source, ServerPlayerEntity player) {
+        MinecraftServer server = source.getServer();
+        var link = ropeManager.findForPlayer(player.getUuid()).or(() -> ropeManager.findControlledBy(player.getUuid()));
+        if (link.isEmpty()) {
+            source.sendFeedback(() -> Text.literal(player.getName().getString() + " has no rope state."), false);
+            return 0;
+        }
+
+        RopeLink current = link.get();
+        source.sendFeedback(() -> Text.literal("Inspecting " + player.getName().getString() + ": "
+                + describeLink(current, server)), false);
+        source.sendFeedback(() -> Text.literal("age=" + formatSeconds(current.ageTicks()) + "s"
+                + ", taut=" + current.isTaut()
+                + ", refundLead=" + current.refundLeadOnManualRelease()
+                + ", maxHeld=" + formatOptionalTicks(RopeConfig.maxHeldDurationTicks())), false);
+        return 1;
+    }
+
     private static int list(RopeManager ropeManager, ServerCommandSource source) {
         MinecraftServer server = source.getServer();
         var links = ropeManager.links();
@@ -151,7 +177,15 @@ public final class RopeCommands {
 
     private static int reloadConfig(ServerCommandSource source) {
         RopeConfig.load();
-        source.sendFeedback(() -> Text.literal("Reloaded MC-ELMA Rope config: "
+        return config(source, "Reloaded MC-ELMA Rope config");
+    }
+
+    private static int config(ServerCommandSource source) {
+        return config(source, "MC-ELMA Rope config");
+    }
+
+    private static int config(ServerCommandSource source, String prefix) {
+        source.sendFeedback(() -> Text.literal(prefix + ": "
                 + RopeConfig.anchorBlockIdCount() + " anchor id(s), "
                 + RopeConfig.anchorBlockTagCount() + " anchor tag(s), bind "
                 + formatSeconds(RopeConfig.bindDurationTicks()) + "s, controller release "
@@ -160,7 +194,17 @@ public final class RopeCommands {
                 + formatSeconds(RopeConfig.selfEscapeDurationTicks()) + "s at 1/"
                 + RopeConfig.selfEscapeSuccessDenominator() + ", holder damage drop 1/"
                 + RopeConfig.holderDamageDropDenominator() + ", rope pull "
-                + RopeConfig.ropeMaxPullSpeed() + "b/t."), true);
+                + RopeConfig.ropeMaxPullSpeed() + "b/t, physics="
+                + RopeConfig.ropePhysicsPreset() + "."), true);
+        source.sendFeedback(() -> Text.literal(prefix + ": permission=" + RopeConfig.commandPermissionLevel()
+                + ", maxLinks=" + RopeConfig.maxActiveLinks()
+                + ", maxHeld=" + formatOptionalTicks(RopeConfig.maxHeldDurationTicks())
+                + ", spawnProtection=" + RopeConfig.spawnProtectionRadius()
+                + ", visual=" + RopeConfig.ropeVisualEnabled()
+                + "/" + RopeConfig.ropeVisualWidthPreset()
+                + "/" + RopeConfig.ropeVisualSegments()
+                + ", logs=" + RopeConfig.logRopeEvents()
+                + ", persistRopes=" + RopeConfig.persistRopes() + "."), false);
         return 1;
     }
 
@@ -197,6 +241,10 @@ public final class RopeCommands {
         return String.format(java.util.Locale.ROOT, "%.1f", ticks / 20.0D);
     }
 
+    private static String formatOptionalTicks(int ticks) {
+        return ticks <= 0 ? "off" : formatSeconds(ticks) + "s";
+    }
+
     private static int reportAddFailure(ServerCommandSource source, RopeManager.AddResult result) {
         Text message = switch (result) {
             case FULL -> Text.literal("Rope limit reached.");
@@ -207,6 +255,7 @@ public final class RopeCommands {
             case NO_LINK -> Text.literal("No rope link found.");
             case NOT_CONTROLLER -> Text.literal("Only the player leading this rope can do that.");
             case NO_CARRIED_PLAYER -> Text.literal("No carried player found.");
+            case PROTECTED_PLAYER -> Text.literal("That player is protected from rope binding.");
             case ADDED -> Text.literal("Rope added.");
         };
         source.sendError(message);

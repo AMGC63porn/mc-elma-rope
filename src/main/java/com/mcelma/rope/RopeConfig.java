@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.slf4j.Logger;
 
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.Block;
@@ -18,11 +19,13 @@ import net.minecraft.block.BlockState;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.tag.TagKey;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public final class RopeConfig {
+    private static final Logger LOGGER = McElmaRopeMod.LOGGER;
     private static final double MIN_LENGTH = 1.0D;
     private static final double FALLBACK_MAX_LENGTH = 48.0D;
     private static final double FALLBACK_PLAYER_ROPE_LENGTH = 12.0D;
@@ -43,6 +46,10 @@ public final class RopeConfig {
     private static final double FALLBACK_ROPE_EMERGENCY_STRETCH_MULTIPLIER = 2.5D;
     private static final double FALLBACK_ROPE_EMERGENCY_MAX_PULL_SPEED = 0.8D;
     private static final double FALLBACK_ROPE_SWING_DAMPING = 0.985D;
+    private static final String FALLBACK_ROPE_PHYSICS_PRESET = "custom";
+    private static final int FALLBACK_ROPE_VISUAL_SEGMENTS = 20;
+    private static final double FALLBACK_ROPE_VISUAL_SAG = 0.045D;
+    private static final String FALLBACK_ROPE_VISUAL_WIDTH_PRESET = "balanced";
     private static final double TAUT_TOLERANCE = 0.03D;
     private static final int COMMAND_PERMISSION_LEVEL = 2;
     private static final int MAX_ACTIVE_LINKS = 256;
@@ -74,6 +81,7 @@ public final class RopeConfig {
             ConfigData loaded = GSON.fromJson(reader, ConfigData.class);
             data = loaded == null ? ConfigData.defaults() : loaded.normalized();
         } catch (IOException | RuntimeException ignored) {
+            LOGGER.warn("Failed to load MC-ELMA Rope config at {}. Using in-memory defaults.", path);
             data = ConfigData.defaults();
         }
 
@@ -102,11 +110,11 @@ public final class RopeConfig {
     }
 
     public static int commandPermissionLevel() {
-        return COMMAND_PERMISSION_LEVEL;
+        return Math.max(0, data.commandPermissionLevel);
     }
 
     public static int maxActiveLinks() {
-        return MAX_ACTIVE_LINKS;
+        return Math.max(1, data.maxActiveLinks);
     }
 
     public static int bindDurationTicks() {
@@ -125,6 +133,10 @@ public final class RopeConfig {
         return data.enableThirdPartyRelease;
     }
 
+    public static boolean allowThirdPartyRelease() {
+        return data.enableThirdPartyRelease;
+    }
+
     public static double maxStartDistance() {
         return Math.max(MIN_LENGTH, data.maxStartDistance);
     }
@@ -138,6 +150,10 @@ public final class RopeConfig {
     }
 
     public static boolean enableSelfEscape() {
+        return data.enableSelfEscape;
+    }
+
+    public static boolean allowSelfEscape() {
         return data.enableSelfEscape;
     }
 
@@ -165,28 +181,79 @@ public final class RopeConfig {
         return data.enableHolderDamageDrop;
     }
 
+    public static boolean allowHolderDamageDrop() {
+        return data.enableHolderDamageDrop;
+    }
+
     public static int holderDamageDropDenominator() {
         return Math.max(1, data.holderDamageDropDenominator);
     }
 
     public static double ropeCorrectionRate() {
-        return Math.max(0.0D, data.ropeCorrectionRate);
+        return physicsPreset().correctionRate(data.ropeCorrectionRate);
     }
 
     public static double ropeMaxPullSpeed() {
-        return Math.max(0.0D, data.ropeMaxPullSpeed);
+        return physicsPreset().maxPullSpeed(data.ropeMaxPullSpeed);
     }
 
     public static double ropeEmergencyStretchMultiplier() {
-        return Math.max(1.0D, data.ropeEmergencyStretchMultiplier);
+        return physicsPreset().emergencyStretchMultiplier(data.ropeEmergencyStretchMultiplier);
     }
 
     public static double ropeEmergencyMaxPullSpeed() {
-        return Math.max(0.0D, data.ropeEmergencyMaxPullSpeed);
+        return physicsPreset().emergencyMaxPullSpeed(data.ropeEmergencyMaxPullSpeed);
     }
 
     public static double ropeSwingDamping() {
-        return clamp(data.ropeSwingDamping, 0.0D, 1.0D);
+        return physicsPreset().swingDamping(data.ropeSwingDamping);
+    }
+
+    public static String ropePhysicsPreset() {
+        return data.ropePhysicsPreset;
+    }
+
+    public static boolean ropeVisualEnabled() {
+        return data.ropeVisualEnabled;
+    }
+
+    public static int ropeVisualSegments() {
+        return clamp(data.ropeVisualSegments, 4, 64);
+    }
+
+    public static double ropeVisualSag() {
+        return clamp(data.ropeVisualSag, 0.0D, 0.25D);
+    }
+
+    public static String ropeVisualWidthPreset() {
+        return data.ropeVisualWidthPreset;
+    }
+
+    public static boolean enableActionFeedbackEffects() {
+        return data.enableActionFeedbackEffects;
+    }
+
+    public static boolean logRopeEvents() {
+        return data.logRopeEvents;
+    }
+
+    public static int maxHeldDurationTicks() {
+        return Math.max(0, data.maxHeldDurationTicks);
+    }
+
+    public static double spawnProtectionRadius() {
+        return Math.max(0.0D, data.spawnProtectionRadius);
+    }
+
+    public static boolean persistRopes() {
+        return data.persistRopes;
+    }
+
+    public static boolean isProtectedPlayer(ServerPlayerEntity player) {
+        String uuid = player.getUuidAsString();
+        String name = player.getName().getString();
+        return data.protectedPlayerIds.stream().anyMatch(entry -> entry.equalsIgnoreCase(uuid))
+                || data.protectedPlayerNames.stream().anyMatch(entry -> entry.equalsIgnoreCase(name));
     }
 
     public static int anchorBlockIdCount() {
@@ -210,7 +277,7 @@ public final class RopeConfig {
                 GSON.toJson(ConfigData.defaults(), writer);
             }
         } catch (IOException ignored) {
-            // The mod can still run with in-memory defaults.
+            LOGGER.warn("Failed to write default MC-ELMA Rope config at {}. Using in-memory defaults.", path);
         }
     }
 
@@ -257,7 +324,21 @@ public final class RopeConfig {
         double ropeEmergencyStretchMultiplier = FALLBACK_ROPE_EMERGENCY_STRETCH_MULTIPLIER;
         double ropeEmergencyMaxPullSpeed = FALLBACK_ROPE_EMERGENCY_MAX_PULL_SPEED;
         double ropeSwingDamping = FALLBACK_ROPE_SWING_DAMPING;
+        String ropePhysicsPreset = FALLBACK_ROPE_PHYSICS_PRESET;
         List<String> anchorBlockIds = DEFAULT_ANCHOR_BLOCKS;
+        int commandPermissionLevel = COMMAND_PERMISSION_LEVEL;
+        int maxActiveLinks = MAX_ACTIVE_LINKS;
+        boolean ropeVisualEnabled = true;
+        int ropeVisualSegments = FALLBACK_ROPE_VISUAL_SEGMENTS;
+        double ropeVisualSag = FALLBACK_ROPE_VISUAL_SAG;
+        String ropeVisualWidthPreset = FALLBACK_ROPE_VISUAL_WIDTH_PRESET;
+        boolean enableActionFeedbackEffects = true;
+        boolean logRopeEvents = true;
+        int maxHeldDurationTicks = 0;
+        double spawnProtectionRadius = 0.0D;
+        boolean persistRopes = false;
+        List<String> protectedPlayerNames = List.of();
+        List<String> protectedPlayerIds = List.of();
 
         static ConfigData defaults() {
             return new ConfigData();
@@ -295,8 +376,22 @@ public final class RopeConfig {
                     ropeEmergencyMaxPullSpeed,
                     FALLBACK_ROPE_EMERGENCY_MAX_PULL_SPEED);
             ropeSwingDamping = sanitizeRange(ropeSwingDamping, 0.0D, 1.0D, FALLBACK_ROPE_SWING_DAMPING);
+            ropePhysicsPreset = normalizePhysicsPreset(ropePhysicsPreset);
+            commandPermissionLevel = Math.max(0, commandPermissionLevel);
+            maxActiveLinks = Math.max(1, maxActiveLinks);
+            ropeVisualSegments = clamp(ropeVisualSegments, 4, 64);
+            ropeVisualSag = sanitizeRange(ropeVisualSag, 0.0D, 0.25D, FALLBACK_ROPE_VISUAL_SAG);
+            ropeVisualWidthPreset = normalizeWidthPreset(ropeVisualWidthPreset);
+            maxHeldDurationTicks = Math.max(0, maxHeldDurationTicks);
+            spawnProtectionRadius = sanitizeNonNegative(spawnProtectionRadius, 0.0D);
             if (anchorBlockIds == null || anchorBlockIds.isEmpty()) {
                 anchorBlockIds = DEFAULT_ANCHOR_BLOCKS;
+            }
+            if (protectedPlayerNames == null) {
+                protectedPlayerNames = List.of();
+            }
+            if (protectedPlayerIds == null) {
+                protectedPlayerIds = List.of();
             }
             return this;
         }
@@ -325,9 +420,80 @@ public final class RopeConfig {
             }
             return clamp(value, min, max);
         }
+
+        private static String normalizeWidthPreset(String value) {
+            if (value == null) {
+                return FALLBACK_ROPE_VISUAL_WIDTH_PRESET;
+            }
+            String normalized = value.toLowerCase(java.util.Locale.ROOT);
+            return switch (normalized) {
+                case "thin", "balanced", "thick" -> normalized;
+                default -> FALLBACK_ROPE_VISUAL_WIDTH_PRESET;
+            };
+        }
+
+        private static String normalizePhysicsPreset(String value) {
+            if (value == null) {
+                return FALLBACK_ROPE_PHYSICS_PRESET;
+            }
+            String normalized = value.toLowerCase(java.util.Locale.ROOT);
+            return switch (normalized) {
+                case "custom", "soft", "balanced", "strict" -> normalized;
+                default -> FALLBACK_ROPE_PHYSICS_PRESET;
+            };
+        }
+    }
+
+    private static PhysicsPreset physicsPreset() {
+        return switch (data.ropePhysicsPreset) {
+            case "soft" -> new PhysicsPreset(0.22D, 0.32D, 2.8D, 0.62D, 0.992D);
+            case "balanced" -> new PhysicsPreset(
+                    FALLBACK_ROPE_CORRECTION_RATE,
+                    FALLBACK_ROPE_MAX_PULL_SPEED,
+                    FALLBACK_ROPE_EMERGENCY_STRETCH_MULTIPLIER,
+                    FALLBACK_ROPE_EMERGENCY_MAX_PULL_SPEED,
+                    FALLBACK_ROPE_SWING_DAMPING);
+            case "strict" -> new PhysicsPreset(0.52D, 0.58D, 2.0D, 1.0D, 0.972D);
+            default -> PhysicsPreset.custom();
+        };
+    }
+
+    private record PhysicsPreset(
+            double correctionRate,
+            double maxPullSpeed,
+            double emergencyStretchMultiplier,
+            double emergencyMaxPullSpeed,
+            double swingDamping) {
+        static PhysicsPreset custom() {
+            return new PhysicsPreset(Double.NaN, Double.NaN, Double.NaN, Double.NaN, Double.NaN);
+        }
+
+        double correctionRate(double custom) {
+            return Double.isNaN(correctionRate) ? Math.max(0.0D, custom) : correctionRate;
+        }
+
+        double maxPullSpeed(double custom) {
+            return Double.isNaN(maxPullSpeed) ? Math.max(0.0D, custom) : maxPullSpeed;
+        }
+
+        double emergencyStretchMultiplier(double custom) {
+            return Double.isNaN(emergencyStretchMultiplier) ? Math.max(1.0D, custom) : emergencyStretchMultiplier;
+        }
+
+        double emergencyMaxPullSpeed(double custom) {
+            return Double.isNaN(emergencyMaxPullSpeed) ? Math.max(0.0D, custom) : emergencyMaxPullSpeed;
+        }
+
+        double swingDamping(double custom) {
+            return Double.isNaN(swingDamping) ? clamp(custom, 0.0D, 1.0D) : swingDamping;
+        }
     }
 
     private static double clamp(double value, double min, double max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    private static int clamp(int value, int min, int max) {
         return Math.max(min, Math.min(max, value));
     }
 }
