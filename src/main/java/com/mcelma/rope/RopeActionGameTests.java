@@ -23,7 +23,7 @@ public final class RopeActionGameTests {
         ServerPlayerEntity target = context.createMockCreativeServerPlayerInWorld();
         placeFacingSouth(context, controller, new Vec3d(1.0D, 2.0D, 1.0D));
         placeFacingSouth(context, target, new Vec3d(1.0D, 2.0D, 4.0D));
-        controller.changeGameMode(GameMode.SURVIVAL);
+        makeSurvival(controller);
         controller.setStackInHand(Hand.MAIN_HAND, new ItemStack(Items.LEAD, 2));
 
         context.assertEquals(
@@ -183,5 +183,12 @@ public final class RopeActionGameTests {
 
     private static void placeFacingSouth(TestContext context, ServerPlayerEntity player, Vec3d relativePos) {
         player.refreshPositionAndAngles(context.getAbsolute(relativePos), 0.0F, 0.0F);
+    }
+
+    private static void makeSurvival(ServerPlayerEntity player) {
+        player.changeGameMode(GameMode.SURVIVAL);
+        player.interactionManager.changeGameMode(GameMode.SURVIVAL);
+        player.getAbilities().creativeMode = false;
+        player.sendAbilitiesUpdate();
     }
 }

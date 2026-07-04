@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.11 - Headless GameTest Validation
+
+- Added a repeatable headless Fabric GameTest runner script.
+- Verified the full 26-test Fabric GameTest suite in a headless server run.
+- Switched server-side creative/spectator checks to server game mode state.
+- Added `minecraft:iron_chain` to the default anchor list for Minecraft
+  `1.21.10` chain block compatibility while keeping `minecraft:chain`.
+- Bumped mod version to `0.3.11`.
+
 ## 0.3.10 - Disconnect Refund Regression Coverage
 
 - Added Fabric GameTest coverage that proves a tied target disconnect can refund

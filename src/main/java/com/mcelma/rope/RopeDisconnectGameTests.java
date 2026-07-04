@@ -73,7 +73,7 @@ public final class RopeDisconnectGameTests {
         RopeManager manager = new RopeManager();
         ServerPlayerEntity controller = context.createMockCreativeServerPlayerInWorld();
         ServerPlayerEntity target = context.createMockCreativeServerPlayerInWorld();
-        controller.changeGameMode(GameMode.SURVIVAL);
+        makeSurvival(controller);
 
         context.assertEquals(
                 RopeManager.AddResult.ADDED,
@@ -118,5 +118,12 @@ public final class RopeDisconnectGameTests {
             }
         }
         return count;
+    }
+
+    private static void makeSurvival(ServerPlayerEntity player) {
+        player.changeGameMode(GameMode.SURVIVAL);
+        player.interactionManager.changeGameMode(GameMode.SURVIVAL);
+        player.getAbilities().creativeMode = false;
+        player.sendAbilitiesUpdate();
     }
 }

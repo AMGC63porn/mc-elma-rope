@@ -59,6 +59,7 @@ public final class RopeConfigGameTests {
         context.setBlockState(fencePos, Blocks.OAK_FENCE);
         context.assertTrue(RopeConfig.isAnchorBlock(context.getWorld(), context.getAbsolutePos(fencePos)),
                 Text.literal("Custom anchor tag did not reload."));
+        RopeConfig.resetForTests();
         context.complete();
     }
 
@@ -78,6 +79,7 @@ public final class RopeConfigGameTests {
         context.setBlockState(chainPos, Blocks.IRON_CHAIN);
         context.assertTrue(RopeConfig.isAnchorBlock(context.getWorld(), context.getAbsolutePos(chainPos)),
                 Text.literal("Malformed config did not restore default chain anchor."));
+        RopeConfig.resetForTests();
         context.complete();
     }
 
@@ -98,6 +100,7 @@ public final class RopeConfigGameTests {
                 """);
 
         context.assertTrue(RopeConfig.isProtectedPlayer(player), Text.literal("Protected name did not reload."));
+        RopeConfig.resetForTests();
         context.complete();
     }
 }

@@ -70,7 +70,7 @@ public final class RopeLifecycleGameTests {
                 RopeManager.AddResult.ADDED,
                 deadManager.addPlayerLink(deadController, deadTarget, RopeConfig.defaultPlayerRopeLength(), true),
                 Text.literal("Dead-endpoint test rope was not added."));
-        context.killEntity(deadTarget);
+        deadTarget.discard();
         deadManager.tick(context.getWorld().getServer());
         context.assertEquals(0, deadManager.activeCount(), Text.literal("Dead endpoint rope was not cleared."));
 
@@ -85,9 +85,14 @@ public final class RopeLifecycleGameTests {
                         RopeConfig.defaultPlayerRopeLength(),
                         true),
                 Text.literal("Spectator-endpoint test rope was not added."));
-        spectatorTarget.changeGameMode(GameMode.SPECTATOR);
+        makeSpectator(spectatorTarget);
         spectatorManager.tick(context.getWorld().getServer());
         context.assertEquals(0, spectatorManager.activeCount(), Text.literal("Spectator endpoint rope was not cleared."));
         context.complete();
+    }
+
+    private static void makeSpectator(ServerPlayerEntity player) {
+        player.changeGameMode(GameMode.SPECTATOR);
+        player.interactionManager.changeGameMode(GameMode.SPECTATOR);
     }
 }

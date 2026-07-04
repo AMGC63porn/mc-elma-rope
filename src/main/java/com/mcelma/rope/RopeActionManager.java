@@ -20,6 +20,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
 
 public final class RopeActionManager {
@@ -591,13 +592,13 @@ public final class RopeActionManager {
     }
 
     private static void consumeLead(ServerPlayerEntity player) {
-        if (!player.isCreative()) {
+        if (!isCreativeMode(player)) {
             player.getStackInHand(Hand.MAIN_HAND).decrement(1);
         }
     }
 
     private static void refundLead(ServerPlayerEntity player, RopeLink link) {
-        if (!link.refundLeadOnManualRelease() || player.isCreative()) {
+        if (!link.refundLeadOnManualRelease() || isCreativeMode(player)) {
             return;
         }
 
@@ -612,7 +613,15 @@ public final class RopeActionManager {
     }
 
     private static boolean isUsable(ServerPlayerEntity player) {
-        return !player.isRemoved() && player.isAlive() && !player.isSpectator();
+        return !player.isRemoved() && player.isAlive() && !isSpectatorMode(player);
+    }
+
+    private static boolean isCreativeMode(ServerPlayerEntity player) {
+        return player.interactionManager.getGameMode() == GameMode.CREATIVE;
+    }
+
+    private static boolean isSpectatorMode(ServerPlayerEntity player) {
+        return player.interactionManager.getGameMode() == GameMode.SPECTATOR;
     }
 
     private static boolean sameWorld(ServerPlayerEntity first, ServerPlayerEntity second) {

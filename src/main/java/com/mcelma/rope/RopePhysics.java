@@ -6,6 +6,7 @@ import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.GameMode;
 
 public final class RopePhysics {
     private RopePhysics() {
@@ -59,7 +60,9 @@ public final class RopePhysics {
     }
 
     private static boolean isUsable(ServerPlayerEntity player) {
-        return !player.isRemoved() && player.isAlive() && !player.isSpectator();
+        return !player.isRemoved()
+                && player.isAlive()
+                && player.interactionManager.getGameMode() != GameMode.SPECTATOR;
     }
 
     private static boolean sameWorld(ServerPlayerEntity first, ServerPlayerEntity second) {

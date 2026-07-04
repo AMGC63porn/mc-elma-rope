@@ -21,6 +21,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.WorldSavePath;
+import net.minecraft.world.GameMode;
 
 public final class RopeDisconnectPolicy {
     private static final int SCHEMA_VERSION = 1;
@@ -145,7 +146,7 @@ public final class RopeDisconnectPolicy {
         }
 
         ServerPlayerEntity controller = server.getPlayerManager().getPlayer(link.controllerUuid());
-        if (controller == null || controller.isCreative()) {
+        if (controller == null || isCreativeMode(controller)) {
             return;
         }
 
@@ -210,6 +211,10 @@ public final class RopeDisconnectPolicy {
 
     private static Path statePath(MinecraftServer server) {
         return server.getSavePath(WorldSavePath.ROOT).resolve("mc_elma_rope_disconnect_penalties.json");
+    }
+
+    private static boolean isCreativeMode(ServerPlayerEntity player) {
+        return player.interactionManager.getGameMode() == GameMode.CREATIVE;
     }
 
     private static final class PenaltyState {

@@ -62,6 +62,7 @@ public final class RopeConfig {
             "#minecraft:fence_gates",
             "#minecraft:walls",
             "minecraft:iron_bars",
+            "minecraft:iron_chain",
             "minecraft:chain",
             "minecraft:lightning_rod",
             "minecraft:end_rod",

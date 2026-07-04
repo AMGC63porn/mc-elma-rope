@@ -25,11 +25,20 @@ The build runs `verifyGameplayInvariants` and `verifyReleaseJar`, which check:
 - required server and optional client classes are present
 - the Fabric GameTest entrypoint and smoke test class are present
 
+Run the headless Fabric GameTest suite with Java 21:
+
+```bash
+scripts/run-headless-gametests.sh
+```
+
+The script writes an XML report to
+`build/gametest-results/mc_elma_rope-gametest.xml`.
+
 ## Dedicated Server Boot
 
 - Start a Fabric dedicated server for Minecraft `1.21.10`.
 - Install Fabric API `0.138.4+1.21.10`.
-- Install `mc_elma_rope-0.3.10.jar` on the server.
+- Install `mc_elma_rope-0.3.11.jar` on the server.
 - Confirm startup creates or reads `config/mc_elma_rope.json`.
 - Confirm no client-only classloading crash occurs.
 
