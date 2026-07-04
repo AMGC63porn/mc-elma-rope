@@ -13,6 +13,8 @@ import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -52,11 +54,13 @@ public final class RopeActionManager {
                 continue;
             }
 
+            Progress progress = progressFor(actor, action);
             action.elapsedTicks++;
+            action.progressTicks += progress.ticks();
             if (action.elapsedTicks == 1 || action.elapsedTicks % 20 == 0) {
-                sendProgress(actor, action);
+                sendProgress(actor, action, progress.message());
             }
-            if (action.elapsedTicks >= action.durationTicks) {
+            if (action.progressTicks >= action.durationTicks) {
                 complete(server, actor, action);
                 iterator.remove();
                 applyActionCooldown(action);
@@ -254,10 +258,6 @@ public final class RopeActionManager {
         if (selfEscapeCooldowns.getOrDefault(actor.getUuid(), 0) > 0) {
             return fail(actor, "You need more time before another escape attempt.");
         }
-        if (nearController(actor, link)) {
-            applySelfEscapeCooldown(actor.getUuid());
-            return fail(actor, "The rope holder is too close to escape.");
-        }
         if (RopeConfig.selfEscapeCancelWhenTaut() && link.isTaut()) {
             applySelfEscapeCooldown(actor.getUuid());
             return fail(actor, "The rope is too tight to escape.");
@@ -345,9 +345,6 @@ public final class RopeActionManager {
             return false;
         }
         if (actor.getEyePos().squaredDistanceTo(action.startPosition) > SELF_ESCAPE_MAX_MOVEMENT_SQUARED) {
-            return false;
-        }
-        if (nearController(actor, link.get())) {
             return false;
         }
         return !RopeConfig.selfEscapeCancelWhenTaut() || !link.get().isTaut();
@@ -490,8 +487,41 @@ public final class RopeActionManager {
         return actor.getRotationVec(1.0F).normalize().dotProduct(offset.normalize()) >= LOOK_DOT_THRESHOLD;
     }
 
-    private void sendProgress(ServerPlayerEntity actor, PendingAction action) {
-        int remainingTicks = Math.max(0, action.durationTicks - action.elapsedTicks);
+    private Progress progressFor(ServerPlayerEntity actor, PendingAction action) {
+        if (action.type != ActionType.SELF_ESCAPE) {
+            return Progress.normal();
+        }
+
+        Optional<RopeLink> link = ropeManager.findForPlayer(actor.getUuid());
+        if (link.isEmpty() || !link.get().id().equals(action.linkId)) {
+            return Progress.normal();
+        }
+
+        double multiplier = 1.0D;
+        String message = "";
+        if (nearController(actor, link.get())) {
+            multiplier = Math.min(multiplier, RopeConfig.selfEscapeGuardProgressMultiplier());
+            message = multiplier <= 0.0D
+                    ? "Paused: the rope holder is too close."
+                    : "Slowed: the rope holder is close.";
+        }
+        if (link.get().isTaut() && !RopeConfig.selfEscapeCancelWhenTaut()) {
+            multiplier = Math.min(multiplier, RopeConfig.selfEscapeTautProgressMultiplier());
+            message = multiplier <= 0.0D
+                    ? "Paused: the rope is tight."
+                    : "Slowed: the rope is tight.";
+        }
+
+        return new Progress(multiplier, message);
+    }
+
+    private void sendProgress(ServerPlayerEntity actor, PendingAction action, String progressMessage) {
+        if (!progressMessage.isEmpty()) {
+            actor.sendMessage(Text.literal(progressMessage), true);
+            return;
+        }
+
+        int remainingTicks = Math.max(0, (int) Math.ceil(action.durationTicks - action.progressTicks));
         int remainingSeconds = Math.max(1, (int) Math.ceil(remainingTicks / 20.0D));
         actor.sendMessage(Text.literal(action.progressVerb() + "... " + remainingSeconds + "s"), true);
     }
@@ -599,43 +629,84 @@ public final class RopeActionManager {
     }
 
     private static void feedback(ServerPlayerEntity player, Feedback feedback) {
-        if (!RopeConfig.enableActionFeedbackEffects()) {
+        if (!RopeConfig.enableActionFeedbackEffects() && !RopeConfig.enableActionFeedbackSounds()) {
             return;
         }
 
         ServerWorld world = player.getEntityWorld();
         Vec3d position = player.getEyePos().add(0.0D, 0.15D, 0.0D);
+        if (RopeConfig.enableActionFeedbackEffects()) {
+            switch (feedback) {
+                case SUCCESS -> world.spawnParticles(
+                        ParticleTypes.HAPPY_VILLAGER,
+                        position.x,
+                        position.y,
+                        position.z,
+                        3,
+                        0.15D,
+                        0.1D,
+                        0.15D,
+                        0.01D);
+                case FAIL -> world.spawnParticles(
+                        ParticleTypes.SMOKE,
+                        position.x,
+                        position.y,
+                        position.z,
+                        2,
+                        0.08D,
+                        0.08D,
+                        0.08D,
+                        0.005D);
+                case NOTICE -> world.spawnParticles(
+                        ParticleTypes.CRIT,
+                        position.x,
+                        position.y,
+                        position.z,
+                        2,
+                        0.08D,
+                        0.08D,
+                        0.08D,
+                        0.005D);
+            }
+        }
+        playFeedbackSound(player, feedback);
+    }
+
+    private static void playFeedbackSound(ServerPlayerEntity player, Feedback feedback) {
+        if (!RopeConfig.enableActionFeedbackSounds()) {
+            return;
+        }
+
+        ServerWorld world = player.getEntityWorld();
+        Vec3d position = player.getEntityPos();
         switch (feedback) {
-            case SUCCESS -> world.spawnParticles(
-                    ParticleTypes.HAPPY_VILLAGER,
+            case SUCCESS -> world.playSound(
+                    null,
                     position.x,
                     position.y,
                     position.z,
-                    3,
-                    0.15D,
-                    0.1D,
-                    0.15D,
-                    0.01D);
-            case FAIL -> world.spawnParticles(
-                    ParticleTypes.SMOKE,
+                    SoundEvents.ITEM_LEAD_TIED,
+                    SoundCategory.PLAYERS,
+                    0.35F,
+                    1.15F);
+            case FAIL -> world.playSound(
+                    null,
                     position.x,
                     position.y,
                     position.z,
-                    2,
-                    0.08D,
-                    0.08D,
-                    0.08D,
-                    0.005D);
-            case NOTICE -> world.spawnParticles(
-                    ParticleTypes.CRIT,
+                    SoundEvents.ITEM_LEAD_BREAK,
+                    SoundCategory.PLAYERS,
+                    0.25F,
+                    0.75F);
+            case NOTICE -> world.playSound(
+                    null,
                     position.x,
                     position.y,
                     position.z,
-                    2,
-                    0.08D,
-                    0.08D,
-                    0.08D,
-                    0.005D);
+                    SoundEvents.ITEM_LEAD_UNTIED,
+                    SoundCategory.PLAYERS,
+                    0.2F,
+                    1.4F);
         }
     }
 
@@ -691,6 +762,12 @@ public final class RopeActionManager {
         NOTICE
     }
 
+    private record Progress(double ticks, String message) {
+        static Progress normal() {
+            return new Progress(1.0D, "");
+        }
+    }
+
     public enum RequiredHand {
         LEAD,
         EMPTY
@@ -731,6 +808,7 @@ public final class RopeActionManager {
         private final RequiredHand requiredHand;
         private final boolean thirdPartyRelease;
         private int elapsedTicks;
+        private double progressTicks;
 
         private PendingAction(
                 ActionType type,

@@ -40,6 +40,8 @@ public final class RopeConfig {
     private static final int FALLBACK_SELF_ESCAPE_COOLDOWN_TICKS = 1200;
     private static final int FALLBACK_SELF_ESCAPE_SUCCESS_DENOMINATOR = 300;
     private static final double FALLBACK_SELF_ESCAPE_GUARD_RADIUS = 12.0D;
+    private static final double FALLBACK_SELF_ESCAPE_GUARD_PROGRESS_MULTIPLIER = 0.0D;
+    private static final double FALLBACK_SELF_ESCAPE_TAUT_PROGRESS_MULTIPLIER = 0.15D;
     private static final int FALLBACK_HOLDER_DAMAGE_DROP_DENOMINATOR = 100;
     private static final double FALLBACK_ROPE_CORRECTION_RATE = 0.35D;
     private static final double FALLBACK_ROPE_MAX_PULL_SPEED = 0.45D;
@@ -177,6 +179,14 @@ public final class RopeConfig {
         return data.selfEscapeCancelWhenTaut;
     }
 
+    public static double selfEscapeGuardProgressMultiplier() {
+        return clamp(data.selfEscapeGuardProgressMultiplier, 0.0D, 1.0D);
+    }
+
+    public static double selfEscapeTautProgressMultiplier() {
+        return clamp(data.selfEscapeTautProgressMultiplier, 0.0D, 1.0D);
+    }
+
     public static boolean enableHolderDamageDrop() {
         return data.enableHolderDamageDrop;
     }
@@ -187,6 +197,24 @@ public final class RopeConfig {
 
     public static int holderDamageDropDenominator() {
         return Math.max(1, data.holderDamageDropDenominator);
+    }
+
+    public static boolean isHolderDamageTypeAllowed(String damageTypeId, String damageName) {
+        String normalizedId = normalizeDamageId(damageTypeId);
+        String normalizedName = normalizeDamageId(damageName);
+        if (matchesDamageEntry(data.holderDamageDropDeniedDamageTypeIds, normalizedId, normalizedName)) {
+            return false;
+        }
+        return data.holderDamageDropAllowedDamageTypeIds.isEmpty()
+                || matchesDamageEntry(data.holderDamageDropAllowedDamageTypeIds, normalizedId, normalizedName);
+    }
+
+    public static int holderDamageDropAllowedDamageTypeCount() {
+        return data.holderDamageDropAllowedDamageTypeIds.size();
+    }
+
+    public static int holderDamageDropDeniedDamageTypeCount() {
+        return data.holderDamageDropDeniedDamageTypeIds.size();
     }
 
     public static double ropeCorrectionRate() {
@@ -231,6 +259,10 @@ public final class RopeConfig {
 
     public static boolean enableActionFeedbackEffects() {
         return data.enableActionFeedbackEffects;
+    }
+
+    public static boolean enableActionFeedbackSounds() {
+        return data.enableActionFeedbackSounds;
     }
 
     public static boolean logRopeEvents() {
@@ -317,8 +349,12 @@ public final class RopeConfig {
         int selfEscapeSuccessDenominator = FALLBACK_SELF_ESCAPE_SUCCESS_DENOMINATOR;
         double selfEscapeGuardRadius = FALLBACK_SELF_ESCAPE_GUARD_RADIUS;
         boolean selfEscapeCancelWhenTaut = true;
+        double selfEscapeGuardProgressMultiplier = FALLBACK_SELF_ESCAPE_GUARD_PROGRESS_MULTIPLIER;
+        double selfEscapeTautProgressMultiplier = FALLBACK_SELF_ESCAPE_TAUT_PROGRESS_MULTIPLIER;
         boolean enableHolderDamageDrop = true;
         int holderDamageDropDenominator = FALLBACK_HOLDER_DAMAGE_DROP_DENOMINATOR;
+        List<String> holderDamageDropAllowedDamageTypeIds = List.of();
+        List<String> holderDamageDropDeniedDamageTypeIds = List.of();
         double ropeCorrectionRate = FALLBACK_ROPE_CORRECTION_RATE;
         double ropeMaxPullSpeed = FALLBACK_ROPE_MAX_PULL_SPEED;
         double ropeEmergencyStretchMultiplier = FALLBACK_ROPE_EMERGENCY_STRETCH_MULTIPLIER;
@@ -333,6 +369,7 @@ public final class RopeConfig {
         double ropeVisualSag = FALLBACK_ROPE_VISUAL_SAG;
         String ropeVisualWidthPreset = FALLBACK_ROPE_VISUAL_WIDTH_PRESET;
         boolean enableActionFeedbackEffects = true;
+        boolean enableActionFeedbackSounds = true;
         boolean logRopeEvents = true;
         int maxHeldDurationTicks = 0;
         double spawnProtectionRadius = 0.0D;
@@ -364,9 +401,21 @@ public final class RopeConfig {
                     selfEscapeSuccessDenominator,
                     FALLBACK_SELF_ESCAPE_SUCCESS_DENOMINATOR);
             selfEscapeGuardRadius = sanitizeNonNegative(selfEscapeGuardRadius, FALLBACK_SELF_ESCAPE_GUARD_RADIUS);
+            selfEscapeGuardProgressMultiplier = sanitizeRange(
+                    selfEscapeGuardProgressMultiplier,
+                    0.0D,
+                    1.0D,
+                    FALLBACK_SELF_ESCAPE_GUARD_PROGRESS_MULTIPLIER);
+            selfEscapeTautProgressMultiplier = sanitizeRange(
+                    selfEscapeTautProgressMultiplier,
+                    0.0D,
+                    1.0D,
+                    FALLBACK_SELF_ESCAPE_TAUT_PROGRESS_MULTIPLIER);
             holderDamageDropDenominator = sanitizeTicks(
                     holderDamageDropDenominator,
                     FALLBACK_HOLDER_DAMAGE_DROP_DENOMINATOR);
+            holderDamageDropAllowedDamageTypeIds = normalizeDamageList(holderDamageDropAllowedDamageTypeIds);
+            holderDamageDropDeniedDamageTypeIds = normalizeDamageList(holderDamageDropDeniedDamageTypeIds);
             ropeCorrectionRate = sanitizeNonNegative(ropeCorrectionRate, FALLBACK_ROPE_CORRECTION_RATE);
             ropeMaxPullSpeed = sanitizeNonNegative(ropeMaxPullSpeed, FALLBACK_ROPE_MAX_PULL_SPEED);
             ropeEmergencyStretchMultiplier = sanitize(
@@ -442,6 +491,28 @@ public final class RopeConfig {
                 default -> FALLBACK_ROPE_PHYSICS_PRESET;
             };
         }
+
+        private static List<String> normalizeDamageList(List<String> values) {
+            if (values == null || values.isEmpty()) {
+                return List.of();
+            }
+            return values.stream()
+                    .filter(value -> value != null && !value.isBlank())
+                    .map(RopeConfig::normalizeDamageId)
+                    .distinct()
+                    .toList();
+        }
+    }
+
+    private static boolean matchesDamageEntry(List<String> entries, String normalizedId, String normalizedName) {
+        return entries.stream().anyMatch(entry -> entry.equals(normalizedId)
+                || entry.equals(normalizedName)
+                || normalizedId.endsWith(":" + entry)
+                || normalizedName.endsWith(":" + entry));
+    }
+
+    private static String normalizeDamageId(String value) {
+        return value == null ? "" : value.trim().toLowerCase(java.util.Locale.ROOT);
     }
 
     private static PhysicsPreset physicsPreset() {

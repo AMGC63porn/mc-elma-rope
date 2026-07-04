@@ -196,6 +196,14 @@ public final class RopeCommands {
                 + RopeConfig.holderDamageDropDenominator() + ", rope pull "
                 + RopeConfig.ropeMaxPullSpeed() + "b/t, physics="
                 + RopeConfig.ropePhysicsPreset() + "."), true);
+        source.sendFeedback(() -> Text.literal(prefix + ": escape guard radius="
+                + RopeConfig.selfEscapeGuardRadius()
+                + ", guard progress x" + RopeConfig.selfEscapeGuardProgressMultiplier()
+                + ", taut cancel=" + RopeConfig.selfEscapeCancelWhenTaut()
+                + ", taut progress x" + RopeConfig.selfEscapeTautProgressMultiplier()
+                + ", holder damage allow/deny="
+                + RopeConfig.holderDamageDropAllowedDamageTypeCount()
+                + "/" + RopeConfig.holderDamageDropDeniedDamageTypeCount() + "."), false);
         source.sendFeedback(() -> Text.literal(prefix + ": permission=" + RopeConfig.commandPermissionLevel()
                 + ", maxLinks=" + RopeConfig.maxActiveLinks()
                 + ", maxHeld=" + formatOptionalTicks(RopeConfig.maxHeldDurationTicks())
@@ -203,6 +211,8 @@ public final class RopeCommands {
                 + ", visual=" + RopeConfig.ropeVisualEnabled()
                 + "/" + RopeConfig.ropeVisualWidthPreset()
                 + "/" + RopeConfig.ropeVisualSegments()
+                + ", particles=" + RopeConfig.enableActionFeedbackEffects()
+                + ", sounds=" + RopeConfig.enableActionFeedbackSounds()
                 + ", logs=" + RopeConfig.logRopeEvents()
                 + ", persistRopes=" + RopeConfig.persistRopes() + "."), false);
         return 1;

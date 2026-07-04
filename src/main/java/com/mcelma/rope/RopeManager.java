@@ -33,6 +33,8 @@ public final class RopeManager {
             if (!RopePhysics.tick(server, link)) {
                 iterator.remove();
                 log("Auto-cleared invalid rope {}", link.id());
+                notifyEndpoint(server, link.first(), "The rope was released automatically.");
+                notifyEndpoint(server, link.second(), "The rope was released automatically.");
             }
         }
     }
@@ -90,6 +92,22 @@ public final class RopeManager {
                 refundLeadOnManualRelease));
         log("Added player rope {} -> {} length {}", first.getName().getString(), second.getName().getString(),
                 RopeConfig.clampLength(length));
+        return AddResult.ADDED;
+    }
+
+    public AddResult restoreLink(MinecraftServer server, RopeLink link) {
+        if (activeLinks.size() >= RopeConfig.maxActiveLinks()) {
+            return AddResult.FULL;
+        }
+        if (!canRestoreEndpoint(server, link.first()) || !canRestoreEndpoint(server, link.second())) {
+            return AddResult.PROTECTED_PLAYER;
+        }
+        if (hasLinkedPlayer(link.first()) || hasLinkedPlayer(link.second())) {
+            return AddResult.SECOND_ALREADY_LINKED;
+        }
+
+        activeLinks.add(link);
+        log("Restored persisted rope {}", link.id());
         return AddResult.ADDED;
     }
 
@@ -165,9 +183,25 @@ public final class RopeManager {
     }
 
     public int removeForPlayer(UUID playerUuid) {
-        int before = activeLinks.size();
-        activeLinks.removeIf(link -> link.includesPlayer(playerUuid));
-        int removed = before - activeLinks.size();
+        return removeForPlayer(null, playerUuid, null);
+    }
+
+    public int removeForPlayer(MinecraftServer server, UUID playerUuid, String message) {
+        int removed = 0;
+        Iterator<RopeLink> iterator = activeLinks.iterator();
+        while (iterator.hasNext()) {
+            RopeLink link = iterator.next();
+            if (!link.includesPlayer(playerUuid)) {
+                continue;
+            }
+
+            iterator.remove();
+            removed++;
+            if (server != null && message != null) {
+                notifyEndpoint(server, link.first(), message);
+                notifyEndpoint(server, link.second(), message);
+            }
+        }
         if (removed > 0) {
             log("Removed {} rope link(s) for player {}", removed, playerUuid);
         }
@@ -268,6 +302,17 @@ public final class RopeManager {
         return activeLinks.stream()
                 .filter(link -> link.controllerUuid().equals(controllerUuid))
                 .findFirst();
+    }
+
+    private boolean hasLinkedPlayer(RopeEndpoint endpoint) {
+        return endpoint.type() == RopeEndpoint.Type.PLAYER && hasLink(endpoint.playerUuid());
+    }
+
+    private static boolean canRestoreEndpoint(MinecraftServer server, RopeEndpoint endpoint) {
+        if (endpoint.type() != RopeEndpoint.Type.PLAYER) {
+            return true;
+        }
+        return endpoint.resolvePlayer(server).map(player -> !RopeConfig.isProtectedPlayer(player)).orElse(false);
     }
 
     public enum AddResult {

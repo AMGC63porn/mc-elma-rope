@@ -1,3 +1,6 @@
+import groovy.json.JsonSlurper
+import java.util.zip.ZipFile
+
 plugins {
     id 'fabric-loom' version '1.17.13'
     id 'maven-publish'
@@ -50,8 +53,63 @@ tasks.register('releaseJar', Copy) {
     rename { "${project.archives_base_name}-${project.version}.jar" }
 }
 
+tasks.register('verifyReleaseJar') {
+    dependsOn releaseJar
+
+    doLast {
+        def releaseFile = layout.projectDirectory.file("../../release/${project.archives_base_name}-${project.version}.jar").asFile
+        if (!releaseFile.isFile()) {
+            throw new GradleException("Release jar was not created: ${releaseFile}")
+        }
+
+        new ZipFile(releaseFile).withCloseable { zip ->
+            [
+                    'fabric.mod.json',
+                    'com/mcelma/rope/McElmaRopeMod.class',
+                    'com/mcelma/rope/RopeManager.class',
+                    'com/mcelma/rope/RopeActionManager.class',
+                    'com/mcelma/rope/RopePhysics.class',
+                    'com/mcelma/rope/RopePersistence.class',
+                    'com/mcelma/rope/client/McElmaRopeClient.class'
+            ].each { entryName ->
+                if (zip.getEntry(entryName) == null) {
+                    throw new GradleException("Release jar is missing ${entryName}")
+                }
+            }
+
+            def modEntry = zip.getEntry('fabric.mod.json')
+            def input = zip.getInputStream(modEntry)
+            def metadata
+            try {
+                metadata = new JsonSlurper().parse(input)
+            } finally {
+                input.close()
+            }
+
+            if (metadata.id != project.archives_base_name) {
+                throw new GradleException("Unexpected mod id: ${metadata.id}")
+            }
+            if (metadata.version != project.version.toString()) {
+                throw new GradleException("Unexpected mod version: ${metadata.version}")
+            }
+            if (metadata.environment != '*') {
+                throw new GradleException("Mod must remain client-optional/server-safe with environment='*'")
+            }
+            if (metadata.depends.minecraft != project.minecraft_version) {
+                throw new GradleException("Unexpected Minecraft dependency: ${metadata.depends.minecraft}")
+            }
+            if (metadata.depends['fabric-api'] != ">=${project.fabric_version}") {
+                throw new GradleException("Unexpected Fabric API dependency: ${metadata.depends['fabric-api']}")
+            }
+            if (!metadata.entrypoints.main.contains('com.mcelma.rope.McElmaRopeMod')) {
+                throw new GradleException('Main entrypoint is missing.')
+            }
+        }
+    }
+}
+
 build {
-    finalizedBy releaseJar
+    finalizedBy verifyReleaseJar
 }
 
 publishing {

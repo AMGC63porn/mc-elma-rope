@@ -22,12 +22,35 @@ public final class RopeLink {
             RopeEndpoint second,
             double length,
             boolean refundLeadOnManualRelease) {
-        this.id = UUID.randomUUID();
+        this(UUID.randomUUID(), controllerUuid, first, second, length, refundLeadOnManualRelease, 0);
+    }
+
+    private RopeLink(
+            UUID id,
+            UUID controllerUuid,
+            RopeEndpoint first,
+            RopeEndpoint second,
+            double length,
+            boolean refundLeadOnManualRelease,
+            int ageTicks) {
+        this.id = id;
         this.controllerUuid = controllerUuid;
         this.first = first;
         this.second = second;
         this.length = RopeConfig.clampLength(length);
         this.refundLeadOnManualRelease = refundLeadOnManualRelease;
+        this.ageTicks = Math.max(0, ageTicks);
+    }
+
+    public static RopeLink restored(
+            UUID id,
+            UUID controllerUuid,
+            RopeEndpoint first,
+            RopeEndpoint second,
+            double length,
+            boolean refundLeadOnManualRelease,
+            int ageTicks) {
+        return new RopeLink(id, controllerUuid, first, second, length, refundLeadOnManualRelease, ageTicks);
     }
 
     public UUID id() {

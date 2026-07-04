@@ -21,10 +21,12 @@ rope visual renderer.
 - Allow configurable third-party rescue actions for unbound players.
 - Give tied players a difficult, low-chance self-escape attempt.
 - Let a rope slip free at a configurable low chance when the holder takes
-  damage.
+  damage, with optional damage type allow/deny filters.
 - Render active ropes on clients that also install the mod, with smoothed
   endpoint interpolation, configurable sag, and a thicker layered rope look.
 - Protect selected players and optionally disable binding near spawn.
+- Optionally persist rope state across restart and restore it when endpoint
+  players rejoin.
 - Log rope lifecycle events for moderation when enabled.
 - Keep all core state server-side and tick only active rope links.
 
@@ -62,8 +64,10 @@ bind another player while tied.
 
 A tied player can attempt a self-escape with an empty main hand. By default the
 attempt takes 45 seconds, has a 60 second cooldown, and succeeds at 1 in 300.
-The attempt cancels when the holder is nearby, the rope is taut, the tied
-player moves too much, or the tied player takes damage.
+The attempt pauses while the holder is nearby, cancels when the rope is taut by
+default, and cancels when the tied player moves too much or takes damage. Server
+owners can change guarded or taut escape attempts from "paused/canceled" to
+"very slow" through config.
 
 Automatic cleanup from disconnect, death, spectator mode, dimension mismatch,
 or admin clear does not refund leads.
@@ -99,8 +103,12 @@ Important defaults:
 - `selfEscapeDurationTicks`: `900`
 - `selfEscapeCooldownTicks`: `1200`
 - `selfEscapeSuccessDenominator`: `300`
+- `selfEscapeGuardProgressMultiplier`: `0.0`
+- `selfEscapeTautProgressMultiplier`: `0.15`
 - `enableHolderDamageDrop`: `true`
 - `holderDamageDropDenominator`: `100`
+- `holderDamageDropAllowedDamageTypeIds`: `[]`
+- `holderDamageDropDeniedDamageTypeIds`: `[]`
 - `ropePhysicsPreset`: `custom` (`custom`, `soft`, `balanced`, `strict`)
 - `commandPermissionLevel`: `2`
 - `maxActiveLinks`: `256`
@@ -111,6 +119,7 @@ Important defaults:
 - `logRopeEvents`: `true`
 - `persistRopes`: `false`
 - `enableActionFeedbackEffects`: `true`
+- `enableActionFeedbackSounds`: `true`
 - `ropeVisualEnabled`: `true`
 - `ropeVisualSegments`: `20`
 - `ropeVisualSag`: `0.045`
@@ -133,6 +142,11 @@ Anchor entries support block ids and block tags:
 
 Use `/mcelmarope reload` after editing the config.
 
+When `persistRopes` is enabled, rope state is saved into the world folder as
+`mc_elma_rope_state.json`. Player-player ropes restore only after the required
+players are online again. Normal disconnect cleanup during gameplay still
+removes active ropes and does not refund leads.
+
 ## Compatibility
 
 MC-ELMA Rope does not override the vanilla leash system and does not depend on
@@ -144,10 +158,14 @@ without the optional client renderer.
 
 ## Known Limits
 
-- Rope state is not saved across server restarts.
+- Rope state persistence is opt-in and disabled by default.
 - The visual renderer is intentionally lightweight and may be improved later
   with textured or thicker rope rendering.
-- Automated GameTest coverage is not included yet.
+- Full GameTest coverage is not included yet; the build includes release jar
+  metadata verification.
+
+See [TESTING_PROTOCOL.md](TESTING_PROTOCOL.md) for the dedicated server and
+gameplay validation checklist.
 
 ## Build
 
@@ -157,10 +175,11 @@ JDK 21 is required. Use the included Gradle wrapper:
 ./gradlew build
 ```
 
-Successful builds copy the remapped mod jar into the workspace release folder:
+Successful builds verify the release jar metadata and copy the remapped mod jar
+into the workspace release folder:
 
 ```text
-fabric-mod-dev/release/mc_elma_rope-0.2.0.jar
+fabric-mod-dev/release/mc_elma_rope-0.3.0.jar
 ```
 
 ## License

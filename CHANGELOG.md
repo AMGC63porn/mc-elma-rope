@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.3.0 - State, Safety, and Release Quality
+
+- Added opt-in rope state persistence with world-local JSON storage and
+  join-time restore for online endpoints.
+- Added explicit disconnect cleanup through Fabric connection events.
+- Added self-escape progress multipliers so guarded or taut attempts can pause
+  or progress very slowly instead of only canceling.
+- Added optional action feedback sounds separate from particle feedback.
+- Added holder damage drop allow/deny damage type filters.
+- Added `/mcelmarope config` output for escape multipliers, damage filters,
+  feedback sounds, and persistence.
+- Added release jar verification to the Gradle build for mod metadata and key
+  classes.
+- Added `TESTING_PROTOCOL.md` for dedicated server, gameplay, lifecycle, and
+  performance validation.
+- Bumped mod version to `0.3.0`.
+
 ## 0.2.0 - Visual, UX, and Moderation Polish
 
 - Added layered client rope rendering with smoothed endpoints, configurable sag,

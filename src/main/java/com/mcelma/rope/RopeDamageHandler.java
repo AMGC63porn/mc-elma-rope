@@ -2,6 +2,7 @@ package com.mcelma.rope;
 
 import java.util.Optional;
 
+import net.minecraft.entity.damage.DamageSource;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -22,12 +23,15 @@ public final class RopeDamageHandler {
             if (actionManager.cancelSelfEscape(player.getUuid())) {
                 player.sendMessage(Text.literal("Escape attempt interrupted."), true);
             }
-            maybeDropHeldRope(ropeManager, player);
+            maybeDropHeldRope(ropeManager, player, source);
         });
     }
 
-    private static void maybeDropHeldRope(RopeManager ropeManager, ServerPlayerEntity holder) {
+    private static void maybeDropHeldRope(RopeManager ropeManager, ServerPlayerEntity holder, DamageSource source) {
         if (!RopeConfig.enableHolderDamageDrop()) {
+            return;
+        }
+        if (!RopeConfig.isHolderDamageTypeAllowed(damageTypeId(source), source.getName())) {
             return;
         }
 
@@ -63,5 +67,12 @@ public final class RopeDamageHandler {
 
         other.resolvePlayer(server)
                 .ifPresent(player -> player.sendMessage(Text.literal("The rope slipped free."), true));
+    }
+
+    private static String damageTypeId(DamageSource source) {
+        return source.getTypeRegistryEntry()
+                .getKey()
+                .map(key -> key.getValue().toString())
+                .orElse(source.getName());
     }
 }
