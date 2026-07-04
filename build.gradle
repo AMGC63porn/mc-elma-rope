@@ -109,6 +109,77 @@ tasks.register('verifyReleaseJar') {
     }
 }
 
+tasks.register('verifyGameplayInvariants') {
+    doLast {
+        def readText = { String relativePath ->
+            layout.projectDirectory.file(relativePath).asFile.text
+        }
+        def requireInvariant = { boolean condition, String message ->
+            if (!condition) {
+                throw new GradleException(message)
+            }
+        }
+
+        def allJavaSources = fileTree(layout.projectDirectory.dir('src/main/java').asFile) {
+            include '**/*.java'
+        }.files.collect { it.text }.join('\n')
+        def resources = layout.projectDirectory.dir('src/main/resources').asFile
+        def mixinConfigs = fileTree(resources) {
+            include '**/*.mixins.json'
+        }.files
+        def modJson = readText('src/main/resources/fabric.mod.json')
+        def config = readText('src/main/java/com/mcelma/rope/RopeConfig.java')
+        def physics = readText('src/main/java/com/mcelma/rope/RopePhysics.java')
+        def visualSync = readText('src/main/java/com/mcelma/rope/RopeVisualSync.java')
+
+        requireInvariant(mixinConfigs.isEmpty(), 'Mixin configs are intentionally not part of this mod.')
+        requireInvariant(!modJson.contains('"mixins"'), 'fabric.mod.json must not declare mixins.')
+        requireInvariant(modJson.contains('"environment": "*"'), 'The mod must remain server-safe/client-optional.')
+        requireInvariant(modJson.contains('"client"'), 'The optional client renderer entrypoint must remain declared.')
+        requireInvariant(modJson.contains('"main"'), 'The server/main entrypoint must remain declared.')
+
+        requireInvariant(!allJavaSources.contains('requestTeleport('), 'Rope physics must not use teleport correction.')
+        requireInvariant(physics.contains('controllerUuid()'), 'Player-player physics must keep the controller as fixed endpoint.')
+        requireInvariant(physics.contains('setSyncedVelocity(dynamic'), 'Only the dynamic tied player should receive rope velocity correction.')
+        requireInvariant(physics.contains('fallDistance = 0.0D'), 'Fall distance reset must stay tied to taut rope correction.')
+
+        requireInvariant(visualSync.contains('ropeManager.activeCount() == 0'), 'Visual sync must avoid active-link work when no ropes exist.')
+        requireInvariant(visualSync.contains('ServerPlayNetworking.canSend'), 'Visual packets must only target clients that support the payload.')
+        requireInvariant(visualSync.contains('computeIfAbsent'), 'Visual links should be computed once per world per sync tick.')
+
+        [
+                'FALLBACK_MAX_LENGTH = 48.0D',
+                'FALLBACK_BIND_DURATION_TICKS = 60',
+                'FALLBACK_CONTROLLER_RELEASE_DURATION_TICKS = 60',
+                'FALLBACK_THIRD_PARTY_RELEASE_DURATION_TICKS = 240',
+                'FALLBACK_SELF_ESCAPE_DURATION_TICKS = 900',
+                'FALLBACK_SELF_ESCAPE_COOLDOWN_TICKS = 1200',
+                'FALLBACK_SELF_ESCAPE_SUCCESS_DENOMINATOR = 300',
+                'FALLBACK_HOLDER_DAMAGE_DROP_DENOMINATOR = 100',
+                'FALLBACK_DISCONNECT_PENALTY_DURATION_TICKS = 2400',
+                'MAX_ACTIVE_LINKS = 256',
+                'FALLBACK_ROPE_PHYSICS_PRESET = "custom"'
+        ].each { expected ->
+            requireInvariant(config.contains(expected), "Missing or changed gameplay default: ${expected}")
+        }
+
+        [
+                'README.md',
+                'TESTING_PROTOCOL.md',
+                'PUBLISHING.md',
+                'SECURITY.md',
+                'CHANGELOG.md',
+                'LICENSE'
+        ].each { relativePath ->
+            requireInvariant(layout.projectDirectory.file(relativePath).asFile.isFile(), "Missing required release document: ${relativePath}")
+        }
+    }
+}
+
+check {
+    dependsOn verifyGameplayInvariants
+}
+
 build {
     finalizedBy verifyReleaseJar
 }

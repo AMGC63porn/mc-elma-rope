@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.2 - Visual Sync and Build Invariants
+
+- Optimized optional client visual sync so active rope links are not processed
+  when no ropes exist.
+- Cached visual rope lists per world per sync tick instead of recomputing them
+  for every client.
+- Added `verifyGameplayInvariants` to guard core design rules during Gradle
+  `check`, including no mixins, no teleport rope correction, client-optional
+  metadata, key gameplay defaults, and required release docs.
+- Bumped mod version to `0.3.2`.
+
 ## 0.3.1 - Disconnect Abuse Penalty
 
 - Added configurable lead refund to the controller when a tied target

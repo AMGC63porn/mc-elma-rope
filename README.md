@@ -24,6 +24,8 @@ rope visual renderer.
   damage, with optional damage type allow/deny filters.
 - Render active ropes on clients that also install the mod, with smoothed
   endpoint interpolation, configurable sag, and a thicker layered rope look.
+- Keep optional rope visual sync cheap by avoiding active-link processing while
+  no ropes exist and reusing per-world snapshots during sync.
 - Protect selected players and optionally disable binding near spawn.
 - Optionally persist rope state across restart and restore it when endpoint
   players rejoin.
@@ -182,7 +184,7 @@ without the optional client renderer.
 - The visual renderer is intentionally lightweight and may be improved later
   with textured or thicker rope rendering.
 - Full GameTest coverage is not included yet; the build includes release jar
-  metadata verification.
+  metadata verification and source-level gameplay invariant checks.
 
 See [TESTING_PROTOCOL.md](TESTING_PROTOCOL.md) for the dedicated server and
 gameplay validation checklist.
@@ -199,7 +201,7 @@ Successful builds verify the release jar metadata and copy the remapped mod jar
 into the workspace release folder:
 
 ```text
-fabric-mod-dev/release/mc_elma_rope-0.3.1.jar
+fabric-mod-dev/release/mc_elma_rope-0.3.2.jar
 ```
 
 ## License

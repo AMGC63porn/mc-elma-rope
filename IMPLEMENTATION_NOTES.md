@@ -32,6 +32,9 @@ the player interaction item.
   packets only to clients that advertise the visual payload channel.
 - Rope visuals include length and taut state for client-side sag/interpolation
   only; gameplay remains server-authoritative.
+- Rope visual sync sends one empty state after links clear, skips active-link
+  processing while no ropes exist, and caches visual link snapshots per world
+  for each sync tick.
 - Anchor blocks are configurable by block id or block tag.
 - Protected player lists, optional spawn protection, optional max held duration,
   damage type filters, and rope event logging are configurable moderation
@@ -49,9 +52,10 @@ the player interaction item.
 ## Build Verification
 
 - Built successfully with Eclipse Adoptium JDK 21.0.11 and Gradle 9.6.1.
-- `./gradlew build` now also runs `verifyReleaseJar`, which checks release jar
-  metadata and required classes.
-- The release jar is copied to `fabric-mod-dev/release/mc_elma_rope-0.3.1.jar`.
+- `./gradlew build` now also runs `verifyGameplayInvariants` and
+  `verifyReleaseJar`, which check source-level design invariants, release jar
+  metadata, and required classes.
+- The release jar is copied to `fabric-mod-dev/release/mc_elma_rope-0.3.2.jar`.
 
 ## Follow-Up Candidates
 

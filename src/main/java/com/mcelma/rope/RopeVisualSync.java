@@ -1,7 +1,9 @@
 package com.mcelma.rope;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -13,6 +15,7 @@ import net.minecraft.world.World;
 public final class RopeVisualSync {
     private static final int SYNC_INTERVAL_TICKS = 2;
     private static int ticksUntilSync;
+    private static boolean sentEmptyState = true;
 
     private RopeVisualSync() {
     }
@@ -24,16 +27,35 @@ public final class RopeVisualSync {
         }
         ticksUntilSync = SYNC_INTERVAL_TICKS;
 
+        if (ropeManager.activeCount() == 0) {
+            if (!sentEmptyState) {
+                sendEmptyState(server);
+                sentEmptyState = true;
+            }
+            return;
+        }
+        sentEmptyState = false;
+
+        Map<RegistryKey<World>, List<RopeVisualPayload.VisualLink>> linksByWorld = new HashMap<>();
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             if (!ServerPlayNetworking.canSend(player, RopeVisualPayload.ID)) {
                 continue;
             }
 
-            List<RopeVisualPayload.VisualLink> links = linksForWorld(
-                    server,
-                    ropeManager,
-                    player.getEntityWorld().getRegistryKey());
+            RegistryKey<World> worldKey = player.getEntityWorld().getRegistryKey();
+            List<RopeVisualPayload.VisualLink> links = linksByWorld.computeIfAbsent(
+                    worldKey,
+                    key -> linksForWorld(server, ropeManager, key));
             ServerPlayNetworking.send(player, new RopeVisualPayload(links));
+        }
+    }
+
+    private static void sendEmptyState(MinecraftServer server) {
+        RopeVisualPayload payload = new RopeVisualPayload(List.of());
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            if (ServerPlayNetworking.canSend(player, RopeVisualPayload.ID)) {
+                ServerPlayNetworking.send(player, payload);
+            }
         }
     }
 

@@ -10,8 +10,14 @@ Run with JDK 21:
 ./gradlew build
 ```
 
-The build runs `verifyReleaseJar`, which checks:
+The build runs `verifyGameplayInvariants` and `verifyReleaseJar`, which check:
 
+- no mixin configuration is introduced
+- teleport rope correction does not return
+- the mod remains server-safe/client-optional in metadata
+- critical gameplay defaults stay pinned
+- visual sync keeps client packets optional and avoids active-link work while
+  idle
 - the release jar exists in `fabric-mod-dev/release/`
 - `fabric.mod.json` exists in the jar
 - mod id and version match Gradle metadata
@@ -22,7 +28,7 @@ The build runs `verifyReleaseJar`, which checks:
 
 - Start a Fabric dedicated server for Minecraft `1.21.10`.
 - Install Fabric API `0.138.4+1.21.10`.
-- Install `mc_elma_rope-0.3.1.jar` on the server.
+- Install `mc_elma_rope-0.3.2.jar` on the server.
 - Confirm startup creates or reads `config/mc_elma_rope.json`.
 - Confirm no client-only classloading crash occurs.
 
