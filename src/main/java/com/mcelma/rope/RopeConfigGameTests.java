@@ -103,4 +103,89 @@ public final class RopeConfigGameTests {
         RopeConfig.resetForTests();
         context.complete();
     }
+
+    @GameTest(maxTicks = 20)
+    public void protectedPlayerIdsReloadFromConfig(TestContext context) {
+        RopeConfig.resetForTests();
+        context.addFinalTask(RopeConfig::resetForTests);
+
+        ServerPlayerEntity player = context.createMockCreativeServerPlayerInWorld();
+        context.assertFalse(RopeConfig.isProtectedPlayer(player), Text.literal("Mock player started protected."));
+
+        RopeConfig.loadJsonForTests("""
+                {
+                  "protectedPlayerIds": [
+                    "%s"
+                  ]
+                }
+                """.formatted(player.getUuidAsString()));
+
+        context.assertTrue(RopeConfig.isProtectedPlayer(player), Text.literal("Protected UUID did not reload."));
+        RopeConfig.resetForTests();
+        context.complete();
+    }
+
+    @GameTest(maxTicks = 20)
+    public void physicsPresetsOverrideCustomValues(TestContext context) {
+        RopeConfig.resetForTests();
+        context.addFinalTask(RopeConfig::resetForTests);
+
+        RopeConfig.loadJsonForTests("""
+                {
+                  "ropePhysicsPreset": "strict",
+                  "ropeCorrectionRate": 0.01,
+                  "ropeMaxPullSpeed": 0.01,
+                  "ropeEmergencyStretchMultiplier": 9.0,
+                  "ropeEmergencyMaxPullSpeed": 0.01,
+                  "ropeSwingDamping": 0.5
+                }
+                """);
+
+        context.assertEquals("strict", RopeConfig.ropePhysicsPreset(), Text.literal("Strict preset did not load."));
+        context.assertEquals(0.52D, RopeConfig.ropeCorrectionRate(),
+                Text.literal("Strict correction rate did not override custom value."));
+        context.assertEquals(0.58D, RopeConfig.ropeMaxPullSpeed(),
+                Text.literal("Strict max pull speed did not override custom value."));
+        context.assertEquals(2.0D, RopeConfig.ropeEmergencyStretchMultiplier(),
+                Text.literal("Strict emergency stretch did not override custom value."));
+        context.assertEquals(1.0D, RopeConfig.ropeEmergencyMaxPullSpeed(),
+                Text.literal("Strict emergency speed did not override custom value."));
+        context.assertEquals(0.972D, RopeConfig.ropeSwingDamping(),
+                Text.literal("Strict swing damping did not override custom value."));
+        RopeConfig.resetForTests();
+        context.complete();
+    }
+
+    @GameTest(maxTicks = 20)
+    public void holderDamageTypeFiltersReloadFromConfig(TestContext context) {
+        RopeConfig.resetForTests();
+        context.addFinalTask(RopeConfig::resetForTests);
+
+        RopeConfig.loadJsonForTests("""
+                {
+                  "holderDamageDropAllowedDamageTypeIds": [
+                    "minecraft:player_attack"
+                  ],
+                  "holderDamageDropDeniedDamageTypeIds": [
+                    "minecraft:fall"
+                  ]
+                }
+                """);
+
+        context.assertEquals(1, RopeConfig.holderDamageDropAllowedDamageTypeCount(),
+                Text.literal("Allowed damage type count did not reload."));
+        context.assertEquals(1, RopeConfig.holderDamageDropDeniedDamageTypeCount(),
+                Text.literal("Denied damage type count did not reload."));
+        context.assertTrue(
+                RopeConfig.isHolderDamageTypeAllowed("minecraft:player_attack", "player_attack"),
+                Text.literal("Allowed damage type was rejected."));
+        context.assertFalse(
+                RopeConfig.isHolderDamageTypeAllowed("minecraft:fall", "fall"),
+                Text.literal("Denied damage type was accepted."));
+        context.assertFalse(
+                RopeConfig.isHolderDamageTypeAllowed("minecraft:lava", "lava"),
+                Text.literal("Unlisted damage type was accepted while allow list was active."));
+        RopeConfig.resetForTests();
+        context.complete();
+    }
 }

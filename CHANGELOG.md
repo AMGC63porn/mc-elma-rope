@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Added Fabric GameTest coverage for disabling third-party rescue.
+- Added Fabric GameTest coverage for spawn-protected bind denial.
+- Added Fabric GameTest coverage for protected player UUIDs.
+- Added Fabric GameTest coverage for physics preset overrides and holder damage
+  type filters.
+- Added Fabric GameTest coverage for `maxHeldDurationTicks` rope expiration.
+
 ## 0.3.11 - Headless GameTest Validation
 
 - Added a repeatable headless Fabric GameTest runner script.

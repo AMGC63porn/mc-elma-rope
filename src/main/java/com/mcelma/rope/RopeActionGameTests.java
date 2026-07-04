@@ -94,6 +94,74 @@ public final class RopeActionGameTests {
     }
 
     @GameTest(maxTicks = 20)
+    public void thirdPartyRescueCanBeDisabled(TestContext context) {
+        RopeConfig.resetForTests();
+        context.addFinalTask(RopeConfig::resetForTests);
+        RopeConfig.loadJsonForTests("""
+                {
+                  "enableThirdPartyRelease": false
+                }
+                """);
+
+        RopeManager manager = new RopeManager();
+        RopeActionManager actions = new RopeActionManager(manager);
+        ServerPlayerEntity controller = context.createMockCreativeServerPlayerInWorld();
+        ServerPlayerEntity target = context.createMockCreativeServerPlayerInWorld();
+        ServerPlayerEntity rescuer = context.createMockCreativeServerPlayerInWorld();
+        placeFacingSouth(context, controller, new Vec3d(4.0D, 2.0D, 1.0D));
+        placeFacingSouth(context, target, new Vec3d(4.0D, 2.0D, 4.0D));
+        placeFacingSouth(context, rescuer, new Vec3d(5.0D, 2.0D, 1.0D));
+        rescuer.setStackInHand(Hand.MAIN_HAND, ItemStack.EMPTY);
+        context.assertEquals(
+                RopeManager.AddResult.ADDED,
+                manager.addPlayerLink(controller, target, RopeConfig.defaultPlayerRopeLength(), true),
+                Text.literal("Player rope was not added."));
+
+        context.assertEquals(
+                ActionResult.FAIL,
+                actions.startReleasePlayer(rescuer, target),
+                Text.literal("Disabled third-party rescue should not start."));
+
+        context.assertFalse(actions.hasAction(rescuer.getUuid()),
+                Text.literal("Disabled third-party rescue still created an action."));
+        context.assertEquals(1, manager.activeCount(),
+                Text.literal("Disabled third-party rescue changed active rope count."));
+        RopeConfig.resetForTests();
+        context.complete();
+    }
+
+    @GameTest(maxTicks = 20)
+    public void spawnProtectionRejectsPlayerBind(TestContext context) {
+        RopeConfig.resetForTests();
+        context.addFinalTask(RopeConfig::resetForTests);
+        RopeConfig.loadJsonForTests("""
+                {
+                  "spawnProtectionRadius": 100000000.0
+                }
+                """);
+
+        RopeManager manager = new RopeManager();
+        RopeActionManager actions = new RopeActionManager(manager);
+        ServerPlayerEntity controller = context.createMockCreativeServerPlayerInWorld();
+        ServerPlayerEntity target = context.createMockCreativeServerPlayerInWorld();
+        placeFacingSouth(context, controller, new Vec3d(12.0D, 2.0D, 1.0D));
+        placeFacingSouth(context, target, new Vec3d(12.0D, 2.0D, 4.0D));
+        controller.setStackInHand(Hand.MAIN_HAND, new ItemStack(Items.LEAD));
+
+        context.assertEquals(
+                ActionResult.FAIL,
+                actions.startBindPlayer(controller, target),
+                Text.literal("Spawn-protected bind should not start."));
+
+        context.assertFalse(actions.hasAction(controller.getUuid()),
+                Text.literal("Spawn-protected bind still created an action."));
+        context.assertEquals(0, manager.activeCount(),
+                Text.literal("Spawn-protected bind changed active rope count."));
+        RopeConfig.resetForTests();
+        context.complete();
+    }
+
+    @GameTest(maxTicks = 20)
     public void tiedPlayerCannotRescueAnotherRope(TestContext context) {
         RopeManager manager = new RopeManager();
         RopeActionManager actions = new RopeActionManager(manager);

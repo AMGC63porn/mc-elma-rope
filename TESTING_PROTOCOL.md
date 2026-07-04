@@ -64,15 +64,21 @@ The release jar declares `com.mcelma.rope.test.McElmaRopeGameTests` under the
 - one-way taut rope physics and loose rope no-op behavior
 - timed bind with lead consumption
 - timed controller release and slower third-party rescue
+- third-party rescue disabled by config
 - tied-player rescue denial
+- spawn-protected bind denial
 - timed anchor tying
 - default taut self-escape denial
 - config value sanitization and malformed config fallback
 - custom anchor id/tag reload
 - protected player name reload
+- protected player UUID reload
+- physics preset override behavior
+- holder damage type filter reload
 - persisted player-player rope save/load restore
 - persisted anchored rope save/load restore
 - pending restore behavior for missing player endpoints
+- max held duration expiration
 - active-link performance smoke scales: `0`, `50`, `100`, `256`
 - manager tick active-link invariant checks
 

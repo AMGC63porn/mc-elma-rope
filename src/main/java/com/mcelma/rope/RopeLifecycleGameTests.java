@@ -91,6 +91,31 @@ public final class RopeLifecycleGameTests {
         context.complete();
     }
 
+    @GameTest(maxTicks = 20)
+    public void maxHeldDurationExpiresOldRopes(TestContext context) {
+        RopeConfig.resetForTests();
+        context.addFinalTask(RopeConfig::resetForTests);
+        RopeConfig.loadJsonForTests("""
+                {
+                  "maxHeldDurationTicks": 1
+                }
+                """);
+
+        RopeManager manager = new RopeManager();
+        ServerPlayerEntity controller = context.createMockCreativeServerPlayerInWorld();
+        ServerPlayerEntity target = context.createMockCreativeServerPlayerInWorld();
+        context.assertEquals(
+                RopeManager.AddResult.ADDED,
+                manager.addPlayerLink(controller, target, RopeConfig.defaultPlayerRopeLength(), true),
+                Text.literal("Player rope was not added."));
+
+        manager.tick(context.getWorld().getServer());
+
+        context.assertEquals(0, manager.activeCount(), Text.literal("Old rope was not expired."));
+        RopeConfig.resetForTests();
+        context.complete();
+    }
+
     private static void makeSpectator(ServerPlayerEntity player) {
         player.changeGameMode(GameMode.SPECTATOR);
         player.interactionManager.changeGameMode(GameMode.SPECTATOR);
