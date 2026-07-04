@@ -33,6 +33,9 @@ The build runs `verifyGameplayInvariants` and `verifyReleaseJar`, which check:
 - Confirm startup creates or reads `config/mc_elma_rope.json`.
 - Confirm no client-only classloading crash occurs.
 
+Latest local dev-runtime smoke evidence is recorded in
+`SERVER_SMOKE_REPORT.md`.
+
 ## Fabric GameTest Smoke Coverage
 
 The release jar declares `com.mcelma.rope.test.McElmaRopeGameTests` under the

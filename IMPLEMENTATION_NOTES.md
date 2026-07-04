@@ -62,11 +62,12 @@ the player interaction item.
   `verifyReleaseJar`, which check source-level design invariants, release jar
   metadata, required classes, and the GameTest entrypoint.
 - The release jar is copied to `fabric-mod-dev/release/mc_elma_rope-0.3.9.jar`.
+- A local Fabric dedicated server dev-runtime smoke test has booted
+  `mc_elma_rope 0.3.9`; see `SERVER_SMOKE_REPORT.md`.
 
 ## Follow-Up Candidates
 
 - Config UI.
 - Textured rope renderer.
 - Command suggestions and richer admin feedback.
-- Dedicated MC-ELMA test server validation with the full modpack.
 - Full dedicated server smoke tests with the MC-ELMA modpack.
