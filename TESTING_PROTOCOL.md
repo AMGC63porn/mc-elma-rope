@@ -29,7 +29,7 @@ The build runs `verifyGameplayInvariants` and `verifyReleaseJar`, which check:
 
 - Start a Fabric dedicated server for Minecraft `1.21.10`.
 - Install Fabric API `0.138.4+1.21.10`.
-- Install `mc_elma_rope-0.3.8.jar` on the server.
+- Install `mc_elma_rope-0.3.9.jar` on the server.
 - Confirm startup creates or reads `config/mc_elma_rope.json`.
 - Confirm no client-only classloading crash occurs.
 
@@ -59,6 +59,8 @@ The release jar declares `com.mcelma.rope.test.McElmaRopeGameTests` under the
 - persisted player-player rope save/load restore
 - persisted anchored rope save/load restore
 - pending restore behavior for missing player endpoints
+- active-link performance smoke scales: `0`, `50`, `100`, `256`
+- manager tick active-link invariant checks
 
 Run these tests with Fabric's GameTest server tooling when the MC-ELMA test
 environment is available. They are smoke tests, not a replacement for the

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.9 - Performance Smoke Coverage
+
+- Added Fabric GameTest smoke coverage for `0`, `50`, `100`, and `256` active
+  rope links.
+- Added build invariants that keep `RopeManager.tick` on an active-link list
+  path with an idle fast path and without online-player scans.
+- Added release jar verification for the performance GameTest class and
+  entrypoint.
+- Bumped mod version to `0.3.9`.
+
 ## 0.3.8 - Persistence Smoke Coverage
 
 - Added Fabric GameTest smoke tests for world-local rope persistence save/load.

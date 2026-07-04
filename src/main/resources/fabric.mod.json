@@ -21,6 +21,7 @@
       "com.mcelma.rope.RopeConfigGameTests",
       "com.mcelma.rope.RopeDisconnectGameTests",
       "com.mcelma.rope.RopeLifecycleGameTests",
+      "com.mcelma.rope.RopePerformanceGameTests",
       "com.mcelma.rope.RopePersistenceGameTests",
       "com.mcelma.rope.RopePhysicsGameTests",
       "com.mcelma.rope.test.McElmaRopeGameTests"

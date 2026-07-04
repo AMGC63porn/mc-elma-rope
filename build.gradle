@@ -75,6 +75,7 @@ tasks.register('verifyReleaseJar') {
                     'com/mcelma/rope/RopeDisconnectPolicy.class',
                     'com/mcelma/rope/RopeDisconnectGameTests.class',
                     'com/mcelma/rope/RopeLifecycleGameTests.class',
+                    'com/mcelma/rope/RopePerformanceGameTests.class',
                     'com/mcelma/rope/RopePersistenceGameTests.class',
                     'com/mcelma/rope/RopePhysicsGameTests.class',
                     'com/mcelma/rope/test/McElmaRopeGameTests.class',
@@ -125,6 +126,9 @@ tasks.register('verifyReleaseJar') {
             if (!gametestEntrypoints.contains('com.mcelma.rope.RopeLifecycleGameTests')) {
                 throw new GradleException('Lifecycle GameTest entrypoint is missing.')
             }
+            if (!gametestEntrypoints.contains('com.mcelma.rope.RopePerformanceGameTests')) {
+                throw new GradleException('Performance GameTest entrypoint is missing.')
+            }
             if (!gametestEntrypoints.contains('com.mcelma.rope.RopePersistenceGameTests')) {
                 throw new GradleException('Persistence GameTest entrypoint is missing.')
             }
@@ -158,6 +162,7 @@ tasks.register('verifyGameplayInvariants') {
         }.files
         def modJson = readText('src/main/resources/fabric.mod.json')
         def config = readText('src/main/java/com/mcelma/rope/RopeConfig.java')
+        def manager = readText('src/main/java/com/mcelma/rope/RopeManager.java')
         def physics = readText('src/main/java/com/mcelma/rope/RopePhysics.java')
         def visualSync = readText('src/main/java/com/mcelma/rope/RopeVisualSync.java')
 
@@ -171,8 +176,13 @@ tasks.register('verifyGameplayInvariants') {
         requireInvariant(modJson.contains('RopeConfigGameTests'), 'Config GameTest entrypoint must remain declared.')
         requireInvariant(modJson.contains('RopeDisconnectGameTests'), 'Disconnect GameTest entrypoint must remain declared.')
         requireInvariant(modJson.contains('RopeLifecycleGameTests'), 'Lifecycle GameTest entrypoint must remain declared.')
+        requireInvariant(modJson.contains('RopePerformanceGameTests'), 'Performance GameTest entrypoint must remain declared.')
         requireInvariant(modJson.contains('RopePersistenceGameTests'), 'Persistence GameTest entrypoint must remain declared.')
         requireInvariant(modJson.contains('RopePhysicsGameTests'), 'Physics GameTest entrypoint must remain declared.')
+
+        requireInvariant(manager.contains('if (activeLinks.isEmpty())'), 'Rope manager must keep an idle fast path.')
+        requireInvariant(manager.contains('Iterator<RopeLink> iterator = activeLinks.iterator()'), 'Rope manager tick must iterate active links directly.')
+        requireInvariant(!manager.contains('getPlayerList()'), 'Rope manager tick must not scan all online players.')
 
         requireInvariant(!allJavaSources.contains('requestTeleport('), 'Rope physics must not use teleport correction.')
         requireInvariant(physics.contains('controllerUuid()'), 'Player-player physics must keep the controller as fixed endpoint.')

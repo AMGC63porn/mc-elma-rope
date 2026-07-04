@@ -34,7 +34,8 @@ rope visual renderer.
 - Log rope lifecycle events for moderation when enabled.
 - Keep all core state server-side and tick only active rope links.
 - Ship Fabric GameTest smoke coverage for config reload, manager, disconnect
-  penalty, lifecycle, persistence, physics, and timed action invariants.
+  penalty, lifecycle, performance, persistence, physics, and timed action
+  invariants.
 
 ## Requirements
 
@@ -203,7 +204,7 @@ Successful builds verify the release jar metadata and copy the remapped mod jar
 into the workspace release folder:
 
 ```text
-fabric-mod-dev/release/mc_elma_rope-0.3.8.jar
+fabric-mod-dev/release/mc_elma_rope-0.3.9.jar
 ```
 
 ## License
