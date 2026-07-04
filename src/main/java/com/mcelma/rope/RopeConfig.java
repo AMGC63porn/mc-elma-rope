@@ -81,13 +81,27 @@ public final class RopeConfig {
         }
 
         try (Reader reader = Files.newBufferedReader(path)) {
-            ConfigData loaded = GSON.fromJson(reader, ConfigData.class);
-            data = loaded == null ? ConfigData.defaults() : loaded.normalized();
+            install(GSON.fromJson(reader, ConfigData.class));
         } catch (IOException | RuntimeException ignored) {
             LOGGER.warn("Failed to load MC-ELMA Rope config at {}. Using in-memory defaults.", path);
-            data = ConfigData.defaults();
+            install(ConfigData.defaults());
         }
+    }
 
+    static void loadJsonForTests(String json) {
+        try {
+            install(GSON.fromJson(json, ConfigData.class));
+        } catch (RuntimeException ignored) {
+            install(ConfigData.defaults());
+        }
+    }
+
+    static void resetForTests() {
+        install(ConfigData.defaults());
+    }
+
+    private static void install(ConfigData nextData) {
+        data = nextData == null ? ConfigData.defaults() : nextData.normalized();
         anchorBlocks = parseAnchorBlockIds(data.anchorBlockIds);
         anchorBlockTags = parseAnchorBlockTags(data.anchorBlockIds);
     }

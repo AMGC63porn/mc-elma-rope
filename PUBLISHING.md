@@ -10,11 +10,11 @@ This file is the handoff checklist for GitHub and Modrinth publication.
 - Description: `Server-authoritative Fabric rope and leash gameplay for Minecraft 1.21.10.`
 - Suggested topics: `minecraft`, `fabric`, `minecraft-mod`, `rope`, `leash`, `mc-elma`
 - License: All Rights Reserved
-- Release tag: `v0.3.6`
-- Release title: `MC-ELMA Rope 0.3.6`
-- Release asset: `mc_elma_rope-0.3.6.jar`
+- Release tag: `v0.3.7`
+- Release title: `MC-ELMA Rope 0.3.7`
+- Release asset: `mc_elma_rope-0.3.7.jar`
 - Repository URL: `https://github.com/<account-or-org>/mc-elma-rope`
-- Release URL: `https://github.com/<account-or-org>/mc-elma-rope/releases/tag/v0.3.6`
+- Release URL: `https://github.com/<account-or-org>/mc-elma-rope/releases/tag/v0.3.7`
 
 Do not commit generated build folders or release jars to the source repository.
 Attach the jar to the GitHub Release instead.
@@ -33,15 +33,15 @@ Attach the jar to the GitHub Release instead.
 - Issues URL: `https://github.com/<account-or-org>/mc-elma-rope/issues`
 - Icon: `publishing/modrinth-icon.svg`
 
-## Modrinth Version 0.3.6
+## Modrinth Version 0.3.7
 
-- Version number: `0.3.6`
+- Version number: `0.3.7`
 - Version type: beta
 - Game version: `1.21.10`
 - Loader: Fabric
 - Dependency: Fabric API `0.138.4+1.21.10` required
-- File: `mc_elma_rope-0.3.6.jar`
-- SHA-256: `1f67a0525f428fa920c57345385473d05caa5f99e388d6daa914b4415aa25bd8`
+- File: `mc_elma_rope-0.3.7.jar`
+- SHA-256: `419671a3abdecfeea084dd782a8366802430ac570e761fa1b4852f8914eb7c4b`
 
 Publish to draft/unlisted first, test with the MC-ELMA server, then list the
 project publicly after gameplay validation.

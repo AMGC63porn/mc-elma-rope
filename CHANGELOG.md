@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.7 - Config Reload Smoke Coverage
+
+- Added a shared config install path so file loads and tests use the same
+  normalization and anchor refresh logic.
+- Added Fabric GameTest smoke tests for config value sanitization, custom
+  anchor id/tag reload, malformed config fallback, and protected player name
+  reload.
+- Added release jar verification for the config GameTest class and entrypoint.
+- Bumped mod version to `0.3.7`.
+
 ## 0.3.6 - Timed Action Smoke Coverage
 
 - Added Fabric GameTest smoke tests for timed lead binding, lead consumption,

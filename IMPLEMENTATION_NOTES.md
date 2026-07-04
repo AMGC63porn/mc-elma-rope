@@ -51,7 +51,8 @@ the player interaction item.
 - Fabric GameTest smoke suites are packaged for config defaults, default anchor
   support, manager cleanup, length clamping, persisted restore duplicate
   protection, disconnect penalty behavior, lifecycle cleanup, and one-way rope
-  physics behavior, plus timed gameplay action behavior.
+  physics behavior, timed gameplay action behavior, and config reload
+  normalization behavior.
 
 ## Build Verification
 
@@ -59,7 +60,7 @@ the player interaction item.
 - `./gradlew build` now also runs `verifyGameplayInvariants` and
   `verifyReleaseJar`, which check source-level design invariants, release jar
   metadata, required classes, and the GameTest entrypoint.
-- The release jar is copied to `fabric-mod-dev/release/mc_elma_rope-0.3.6.jar`.
+- The release jar is copied to `fabric-mod-dev/release/mc_elma_rope-0.3.7.jar`.
 
 ## Follow-Up Candidates
 
@@ -67,4 +68,4 @@ the player interaction item.
 - Textured rope renderer.
 - Command suggestions and richer admin feedback.
 - Dedicated MC-ELMA test server validation with the full modpack.
-- Broader GameTest coverage for config reload and persistence behavior.
+- Broader GameTest coverage for persistence behavior.
