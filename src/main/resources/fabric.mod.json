@@ -15,6 +15,9 @@
     ],
     "client": [
       "com.mcelma.rope.client.McElmaRopeClient"
+    ],
+    "fabric-gametest": [
+      "com.mcelma.rope.test.McElmaRopeGameTests"
     ]
   },
   "depends": {

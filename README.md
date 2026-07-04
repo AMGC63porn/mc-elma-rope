@@ -33,6 +33,7 @@ rope visual renderer.
   configurable reconnect penalties to discourage disconnect abuse.
 - Log rope lifecycle events for moderation when enabled.
 - Keep all core state server-side and tick only active rope links.
+- Ship Fabric GameTest smoke coverage for key config and manager invariants.
 
 ## Requirements
 
@@ -183,8 +184,8 @@ without the optional client renderer.
 - Rope state persistence is opt-in and disabled by default.
 - The visual renderer is intentionally lightweight and may be improved later
   with textured or thicker rope rendering.
-- Full GameTest coverage is not included yet; the build includes release jar
-  metadata verification and source-level gameplay invariant checks.
+- GameTest coverage is currently smoke-level; full multiplayer gameplay
+  validation still belongs in the MC-ELMA test server protocol.
 
 See [TESTING_PROTOCOL.md](TESTING_PROTOCOL.md) for the dedicated server and
 gameplay validation checklist.
@@ -201,7 +202,7 @@ Successful builds verify the release jar metadata and copy the remapped mod jar
 into the workspace release folder:
 
 ```text
-fabric-mod-dev/release/mc_elma_rope-0.3.2.jar
+fabric-mod-dev/release/mc_elma_rope-0.3.3.jar
 ```
 
 ## License

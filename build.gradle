@@ -71,6 +71,7 @@ tasks.register('verifyReleaseJar') {
                     'com/mcelma/rope/RopePhysics.class',
                     'com/mcelma/rope/RopePersistence.class',
                     'com/mcelma/rope/RopeDisconnectPolicy.class',
+                    'com/mcelma/rope/test/McElmaRopeGameTests.class',
                     'com/mcelma/rope/client/McElmaRopeClient.class'
             ].each { entryName ->
                 if (zip.getEntry(entryName) == null) {
@@ -105,6 +106,10 @@ tasks.register('verifyReleaseJar') {
             if (!metadata.entrypoints.main.contains('com.mcelma.rope.McElmaRopeMod')) {
                 throw new GradleException('Main entrypoint is missing.')
             }
+            def gametestEntrypoints = metadata.entrypoints['fabric-gametest'] ?: []
+            if (!gametestEntrypoints.contains('com.mcelma.rope.test.McElmaRopeGameTests')) {
+                throw new GradleException('GameTest entrypoint is missing.')
+            }
         }
     }
 }
@@ -137,6 +142,7 @@ tasks.register('verifyGameplayInvariants') {
         requireInvariant(modJson.contains('"environment": "*"'), 'The mod must remain server-safe/client-optional.')
         requireInvariant(modJson.contains('"client"'), 'The optional client renderer entrypoint must remain declared.')
         requireInvariant(modJson.contains('"main"'), 'The server/main entrypoint must remain declared.')
+        requireInvariant(modJson.contains('"fabric-gametest"'), 'The GameTest entrypoint must remain declared.')
 
         requireInvariant(!allJavaSources.contains('requestTeleport('), 'Rope physics must not use teleport correction.')
         requireInvariant(physics.contains('controllerUuid()'), 'Player-player physics must keep the controller as fixed endpoint.')

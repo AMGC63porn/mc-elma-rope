@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-MC-ELMA Rope `0.1.x` is the current supported beta line.
+MC-ELMA Rope `0.3.x` is the current supported beta line.
 
 ## Reporting a Vulnerability
 

@@ -48,14 +48,17 @@ the player interaction item.
   `mc_elma_rope_disconnect_penalties.json`.
 - Rope links are removed when a player disconnects, dies, becomes spectator, or
   leaves the rope endpoint world. Automatic removal does not refund leads.
+- A Fabric GameTest smoke suite is packaged for config defaults, default anchor
+  support, manager cleanup, length clamping, and persisted restore duplicate
+  protection.
 
 ## Build Verification
 
 - Built successfully with Eclipse Adoptium JDK 21.0.11 and Gradle 9.6.1.
 - `./gradlew build` now also runs `verifyGameplayInvariants` and
   `verifyReleaseJar`, which check source-level design invariants, release jar
-  metadata, and required classes.
-- The release jar is copied to `fabric-mod-dev/release/mc_elma_rope-0.3.2.jar`.
+  metadata, required classes, and the GameTest entrypoint.
+- The release jar is copied to `fabric-mod-dev/release/mc_elma_rope-0.3.3.jar`.
 
 ## Follow-Up Candidates
 
@@ -63,4 +66,4 @@ the player interaction item.
 - Textured rope renderer.
 - Command suggestions and richer admin feedback.
 - Dedicated MC-ELMA test server validation with the full modpack.
-- GameTest coverage for rope lifecycle and config behavior.
+- Broader GameTest coverage for rope lifecycle and action behavior.

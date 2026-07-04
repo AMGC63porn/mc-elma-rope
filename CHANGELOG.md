@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.3 - GameTest Smoke Coverage
+
+- Added a Fabric GameTest entrypoint with smoke tests for config defaults,
+  default anchor support, manager cleanup, length clamping, and persisted link
+  restore duplicate protection.
+- Added release jar verification for the GameTest class and entrypoint.
+- Bumped mod version to `0.3.3`.
+
 ## 0.3.2 - Visual Sync and Build Invariants
 
 - Optimized optional client visual sync so active rope links are not processed
