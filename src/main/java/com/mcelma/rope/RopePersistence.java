@@ -99,6 +99,29 @@ public final class RopePersistence {
         }
     }
 
+    static void clearForTests(MinecraftServer server) {
+        pendingLinks.clear();
+        try {
+            Files.deleteIfExists(statePath(server));
+        } catch (IOException | RuntimeException exception) {
+            McElmaRopeMod.LOGGER.warn("Failed to clear persisted MC-ELMA Rope test state.", exception);
+        }
+    }
+
+    static int pendingLinkCountForTests() {
+        return pendingLinks.size();
+    }
+
+    static void writeStateJsonForTests(MinecraftServer server, String json) {
+        Path path = statePath(server);
+        try {
+            Files.createDirectories(path.getParent());
+            Files.writeString(path, json);
+        } catch (IOException | RuntimeException exception) {
+            throw new IllegalStateException("Failed to write persisted rope test state.", exception);
+        }
+    }
+
     private static void notifyRestored(MinecraftServer server, RopeLink link) {
         notifyEndpoint(server, link.first());
         notifyEndpoint(server, link.second());

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.8 - Persistence Smoke Coverage
+
+- Added Fabric GameTest smoke tests for world-local rope persistence save/load.
+- Covered online player-player rope restore, anchored rope restore, and pending
+  restore behavior when a player endpoint is missing.
+- Added test cleanup helpers for persisted rope state files and pending restore
+  records.
+- Added release jar verification for the persistence GameTest class and
+  entrypoint.
+- Bumped mod version to `0.3.8`.
+
 ## 0.3.7 - Config Reload Smoke Coverage
 
 - Added a shared config install path so file loads and tests use the same
