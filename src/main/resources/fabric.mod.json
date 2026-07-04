@@ -18,6 +18,8 @@
     ],
     "fabric-gametest": [
       "com.mcelma.rope.RopeDisconnectGameTests",
+      "com.mcelma.rope.RopeLifecycleGameTests",
+      "com.mcelma.rope.RopePhysicsGameTests",
       "com.mcelma.rope.test.McElmaRopeGameTests"
     ]
   },

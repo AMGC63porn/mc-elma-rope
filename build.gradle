@@ -72,6 +72,8 @@ tasks.register('verifyReleaseJar') {
                     'com/mcelma/rope/RopePersistence.class',
                     'com/mcelma/rope/RopeDisconnectPolicy.class',
                     'com/mcelma/rope/RopeDisconnectGameTests.class',
+                    'com/mcelma/rope/RopeLifecycleGameTests.class',
+                    'com/mcelma/rope/RopePhysicsGameTests.class',
                     'com/mcelma/rope/test/McElmaRopeGameTests.class',
                     'com/mcelma/rope/client/McElmaRopeClient.class'
             ].each { entryName ->
@@ -111,6 +113,12 @@ tasks.register('verifyReleaseJar') {
             if (!gametestEntrypoints.contains('com.mcelma.rope.RopeDisconnectGameTests')) {
                 throw new GradleException('Disconnect GameTest entrypoint is missing.')
             }
+            if (!gametestEntrypoints.contains('com.mcelma.rope.RopeLifecycleGameTests')) {
+                throw new GradleException('Lifecycle GameTest entrypoint is missing.')
+            }
+            if (!gametestEntrypoints.contains('com.mcelma.rope.RopePhysicsGameTests')) {
+                throw new GradleException('Physics GameTest entrypoint is missing.')
+            }
             if (!gametestEntrypoints.contains('com.mcelma.rope.test.McElmaRopeGameTests')) {
                 throw new GradleException('GameTest entrypoint is missing.')
             }
@@ -148,6 +156,8 @@ tasks.register('verifyGameplayInvariants') {
         requireInvariant(modJson.contains('"main"'), 'The server/main entrypoint must remain declared.')
         requireInvariant(modJson.contains('"fabric-gametest"'), 'The GameTest entrypoint must remain declared.')
         requireInvariant(modJson.contains('RopeDisconnectGameTests'), 'Disconnect GameTest entrypoint must remain declared.')
+        requireInvariant(modJson.contains('RopeLifecycleGameTests'), 'Lifecycle GameTest entrypoint must remain declared.')
+        requireInvariant(modJson.contains('RopePhysicsGameTests'), 'Physics GameTest entrypoint must remain declared.')
 
         requireInvariant(!allJavaSources.contains('requestTeleport('), 'Rope physics must not use teleport correction.')
         requireInvariant(physics.contains('controllerUuid()'), 'Player-player physics must keep the controller as fixed endpoint.')

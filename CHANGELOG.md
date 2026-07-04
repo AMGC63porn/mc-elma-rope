@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.5 - Lifecycle and Physics Smoke Coverage
+
+- Added Fabric GameTest smoke tests for controller release and anchored release
+  permissions.
+- Added lifecycle smoke coverage for dead and spectator endpoint cleanup.
+- Added physics smoke coverage for one-way taut rope correction and loose rope
+  no-op behavior.
+- Added release jar verification for the lifecycle and physics GameTest
+  classes and entrypoints.
+- Bumped mod version to `0.3.5`.
+
 ## 0.3.4 - Disconnect Penalty Smoke Coverage
 
 - Added Fabric GameTest smoke tests for tied target disconnect penalties.
