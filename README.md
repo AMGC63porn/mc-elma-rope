@@ -204,7 +204,7 @@ Successful builds verify the release jar metadata and copy the remapped mod jar
 into the workspace release folder:
 
 ```text
-fabric-mod-dev/release/mc_elma_rope-0.3.9.jar
+fabric-mod-dev/release/mc_elma_rope-0.3.10.jar
 ```
 
 ## License

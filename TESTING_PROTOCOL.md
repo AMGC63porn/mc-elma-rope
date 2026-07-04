@@ -29,7 +29,7 @@ The build runs `verifyGameplayInvariants` and `verifyReleaseJar`, which check:
 
 - Start a Fabric dedicated server for Minecraft `1.21.10`.
 - Install Fabric API `0.138.4+1.21.10`.
-- Install `mc_elma_rope-0.3.9.jar` on the server.
+- Install `mc_elma_rope-0.3.10.jar` on the server.
 - Confirm startup creates or reads `config/mc_elma_rope.json`.
 - Confirm no client-only classloading crash occurs.
 
@@ -48,6 +48,8 @@ The release jar declares `com.mcelma.rope.test.McElmaRopeGameTests` under the
 - persisted link restore duplicate protection
 - tied target disconnect penalty queue and reconnect effect application
 - controller disconnect cleanup without punishing the tied target
+- tied target disconnect lead refund to the survival-mode controller
+- command-created ropes not queuing reconnect penalties by default
 - controller release and anchored release permission behavior
 - dead and spectator endpoint cleanup
 - one-way taut rope physics and loose rope no-op behavior
@@ -112,6 +114,8 @@ multiplayer gameplay checklist below.
 - Disconnect clears active ropes.
 - Tied target disconnect returns one lead to the controller when
   `refundLeadToControllerOnTargetDisconnect=true`.
+- Command-created ropes do not queue reconnect penalties when
+  `disconnectPenaltyOnlyLeadCreatedRopes=true`.
 - Controller disconnect does not punish the tied target.
 - Tied target reconnect receives Mining Fatigue I and Slowness I for 2 minutes
   with default penalty settings.

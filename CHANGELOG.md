@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.10 - Disconnect Refund Regression Coverage
+
+- Added Fabric GameTest coverage that proves a tied target disconnect can refund
+  one lead to the survival-mode controller.
+- Added a regression check that command-created ropes do not queue reconnect
+  penalties by default.
+- Bumped mod version to `0.3.10`.
+
 ## 0.3.9 - Performance Smoke Coverage
 
 - Added Fabric GameTest smoke coverage for `0`, `50`, `100`, and `256` active

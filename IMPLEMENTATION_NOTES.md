@@ -52,8 +52,8 @@ the player interaction item.
   support, manager cleanup, length clamping, persisted restore duplicate
   protection, disconnect penalty behavior, lifecycle cleanup, and one-way rope
   physics behavior, timed gameplay action behavior, and config reload
-  normalization behavior, world-local rope persistence behavior, and active-link
-  performance scale behavior.
+  normalization behavior, world-local rope persistence behavior, active-link
+  performance scale behavior, and disconnect refund/penalty boundaries.
 
 ## Build Verification
 
@@ -61,9 +61,9 @@ the player interaction item.
 - `./gradlew build` now also runs `verifyGameplayInvariants` and
   `verifyReleaseJar`, which check source-level design invariants, release jar
   metadata, required classes, and the GameTest entrypoint.
-- The release jar is copied to `fabric-mod-dev/release/mc_elma_rope-0.3.9.jar`.
+- The release jar is copied to `fabric-mod-dev/release/mc_elma_rope-0.3.10.jar`.
 - A local Fabric dedicated server dev-runtime smoke test has booted
-  `mc_elma_rope 0.3.9`; see `SERVER_SMOKE_REPORT.md`.
+  `mc_elma_rope 0.3.10`; see `SERVER_SMOKE_REPORT.md`.
 
 ## Follow-Up Candidates
 
