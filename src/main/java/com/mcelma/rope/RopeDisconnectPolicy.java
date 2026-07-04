@@ -120,6 +120,14 @@ public final class RopeDisconnectPolicy {
         }
     }
 
+    static void clearPendingPenaltiesForTests() {
+        pendingPenalties.clear();
+    }
+
+    static int pendingPenaltyCountForTests() {
+        return pendingPenalties.size();
+    }
+
     private static boolean isDisconnectingTarget(UUID disconnectedUuid, RopeLink link) {
         return !link.controllerUuid().equals(disconnectedUuid)
                 && link.includesPlayer(disconnectedUuid)

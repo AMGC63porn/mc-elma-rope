@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.4 - Disconnect Penalty Smoke Coverage
+
+- Added Fabric GameTest smoke tests for tied target disconnect penalties.
+- Added a regression check that controller disconnects do not punish tied
+  targets.
+- Added release jar verification for the disconnect GameTest class and
+  entrypoint.
+- Bumped mod version to `0.3.4`.
+
 ## 0.3.3 - GameTest Smoke Coverage
 
 - Added a Fabric GameTest entrypoint with smoke tests for config defaults,

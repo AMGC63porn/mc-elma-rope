@@ -29,7 +29,7 @@ The build runs `verifyGameplayInvariants` and `verifyReleaseJar`, which check:
 
 - Start a Fabric dedicated server for Minecraft `1.21.10`.
 - Install Fabric API `0.138.4+1.21.10`.
-- Install `mc_elma_rope-0.3.3.jar` on the server.
+- Install `mc_elma_rope-0.3.4.jar` on the server.
 - Confirm startup creates or reads `config/mc_elma_rope.json`.
 - Confirm no client-only classloading crash occurs.
 
@@ -43,6 +43,8 @@ The release jar declares `com.mcelma.rope.test.McElmaRopeGameTests` under the
 - manager self-link rejection
 - anchor add, length clamping, and cleanup
 - persisted link restore duplicate protection
+- tied target disconnect penalty queue and reconnect effect application
+- controller disconnect cleanup without punishing the tied target
 
 Run these tests with Fabric's GameTest server tooling when the MC-ELMA test
 environment is available. They are smoke tests, not a replacement for the

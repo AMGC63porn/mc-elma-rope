@@ -33,7 +33,8 @@ rope visual renderer.
   configurable reconnect penalties to discourage disconnect abuse.
 - Log rope lifecycle events for moderation when enabled.
 - Keep all core state server-side and tick only active rope links.
-- Ship Fabric GameTest smoke coverage for key config and manager invariants.
+- Ship Fabric GameTest smoke coverage for key config, manager, and disconnect
+  penalty invariants.
 
 ## Requirements
 
@@ -202,7 +203,7 @@ Successful builds verify the release jar metadata and copy the remapped mod jar
 into the workspace release folder:
 
 ```text
-fabric-mod-dev/release/mc_elma_rope-0.3.3.jar
+fabric-mod-dev/release/mc_elma_rope-0.3.4.jar
 ```
 
 ## License

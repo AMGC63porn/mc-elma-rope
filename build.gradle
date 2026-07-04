@@ -71,6 +71,7 @@ tasks.register('verifyReleaseJar') {
                     'com/mcelma/rope/RopePhysics.class',
                     'com/mcelma/rope/RopePersistence.class',
                     'com/mcelma/rope/RopeDisconnectPolicy.class',
+                    'com/mcelma/rope/RopeDisconnectGameTests.class',
                     'com/mcelma/rope/test/McElmaRopeGameTests.class',
                     'com/mcelma/rope/client/McElmaRopeClient.class'
             ].each { entryName ->
@@ -107,6 +108,9 @@ tasks.register('verifyReleaseJar') {
                 throw new GradleException('Main entrypoint is missing.')
             }
             def gametestEntrypoints = metadata.entrypoints['fabric-gametest'] ?: []
+            if (!gametestEntrypoints.contains('com.mcelma.rope.RopeDisconnectGameTests')) {
+                throw new GradleException('Disconnect GameTest entrypoint is missing.')
+            }
             if (!gametestEntrypoints.contains('com.mcelma.rope.test.McElmaRopeGameTests')) {
                 throw new GradleException('GameTest entrypoint is missing.')
             }
@@ -143,6 +147,7 @@ tasks.register('verifyGameplayInvariants') {
         requireInvariant(modJson.contains('"client"'), 'The optional client renderer entrypoint must remain declared.')
         requireInvariant(modJson.contains('"main"'), 'The server/main entrypoint must remain declared.')
         requireInvariant(modJson.contains('"fabric-gametest"'), 'The GameTest entrypoint must remain declared.')
+        requireInvariant(modJson.contains('RopeDisconnectGameTests'), 'Disconnect GameTest entrypoint must remain declared.')
 
         requireInvariant(!allJavaSources.contains('requestTeleport('), 'Rope physics must not use teleport correction.')
         requireInvariant(physics.contains('controllerUuid()'), 'Player-player physics must keep the controller as fixed endpoint.')
