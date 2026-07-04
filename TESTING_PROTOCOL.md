@@ -29,7 +29,7 @@ The build runs `verifyGameplayInvariants` and `verifyReleaseJar`, which check:
 
 - Start a Fabric dedicated server for Minecraft `1.21.10`.
 - Install Fabric API `0.138.4+1.21.10`.
-- Install `mc_elma_rope-0.3.5.jar` on the server.
+- Install `mc_elma_rope-0.3.6.jar` on the server.
 - Confirm startup creates or reads `config/mc_elma_rope.json`.
 - Confirm no client-only classloading crash occurs.
 
@@ -48,6 +48,11 @@ The release jar declares `com.mcelma.rope.test.McElmaRopeGameTests` under the
 - controller release and anchored release permission behavior
 - dead and spectator endpoint cleanup
 - one-way taut rope physics and loose rope no-op behavior
+- timed bind with lead consumption
+- timed controller release and slower third-party rescue
+- tied-player rescue denial
+- timed anchor tying
+- default taut self-escape denial
 
 Run these tests with Fabric's GameTest server tooling when the MC-ELMA test
 environment is available. They are smoke tests, not a replacement for the

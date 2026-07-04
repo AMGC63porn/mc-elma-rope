@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.6 - Timed Action Smoke Coverage
+
+- Added Fabric GameTest smoke tests for timed lead binding, lead consumption,
+  controller release, third-party rescue duration, anchor tying, and default
+  taut self-escape denial.
+- Added a regression check that tied players cannot rescue another player's
+  rope.
+- Added release jar verification for the action GameTest class and entrypoint.
+- Bumped mod version to `0.3.6`.
+
 ## 0.3.5 - Lifecycle and Physics Smoke Coverage
 
 - Added Fabric GameTest smoke tests for controller release and anchored release
