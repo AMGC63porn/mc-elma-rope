@@ -204,6 +204,14 @@ public final class RopeCommands {
                 + ", holder damage allow/deny="
                 + RopeConfig.holderDamageDropAllowedDamageTypeCount()
                 + "/" + RopeConfig.holderDamageDropDeniedDamageTypeCount() + "."), false);
+        source.sendFeedback(() -> Text.literal(prefix + ": disconnect refund="
+                + RopeConfig.refundLeadToControllerOnTargetDisconnect()
+                + ", disconnect penalty=" + RopeConfig.enableDisconnectPenalty()
+                + ", penalty duration=" + formatOptionalTicks(RopeConfig.disconnectPenaltyDurationTicks())
+                + ", fatigue/slowness="
+                + RopeConfig.disconnectPenaltyMiningFatigueLevel()
+                + "/" + RopeConfig.disconnectPenaltySlownessLevel()
+                + ", persist penalties=" + RopeConfig.persistDisconnectPenalties() + "."), false);
         source.sendFeedback(() -> Text.literal(prefix + ": permission=" + RopeConfig.commandPermissionLevel()
                 + ", maxLinks=" + RopeConfig.maxActiveLinks()
                 + ", maxHeld=" + formatOptionalTicks(RopeConfig.maxHeldDurationTicks())

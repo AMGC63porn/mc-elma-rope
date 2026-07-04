@@ -22,21 +22,20 @@ public final class McElmaRopeMod implements ModInitializer {
         RopeInteractionHandler.register(actionManager);
         RopeDamageHandler.register(ropeManager, actionManager);
         RopeCommands.register(ropeManager);
-        ServerLifecycleEvents.SERVER_STARTED.register(server -> RopePersistence.loadPending(server, ropeManager));
-        ServerLifecycleEvents.SERVER_STOPPING.register(server -> RopePersistence.save(server, ropeManager));
-        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
-                RopePersistence.restoreAvailable(server, ropeManager));
-        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
-            int removed = ropeManager.removeForPlayer(
-                    server,
-                    handler.player.getUuid(),
-                    "The rope was released because a player disconnected.");
-            if (removed > 0 && RopeConfig.logRopeEvents()) {
-                LOGGER.info("Cleaned {} rope link(s) after {} disconnected.",
-                        removed,
-                        handler.player.getName().getString());
-            }
+        ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+            RopePersistence.loadPending(server, ropeManager);
+            RopeDisconnectPolicy.load(server);
         });
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            RopePersistence.save(server, ropeManager);
+            RopeDisconnectPolicy.save(server);
+        });
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            RopePersistence.restoreAvailable(server, ropeManager);
+            RopeDisconnectPolicy.handleJoin(server, handler.player);
+        });
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
+                RopeDisconnectPolicy.handleDisconnect(server, handler.player, ropeManager));
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             ropeManager.tick(server);
             actionManager.tick(server);

@@ -43,6 +43,7 @@ public final class RopeConfig {
     private static final double FALLBACK_SELF_ESCAPE_GUARD_PROGRESS_MULTIPLIER = 0.0D;
     private static final double FALLBACK_SELF_ESCAPE_TAUT_PROGRESS_MULTIPLIER = 0.15D;
     private static final int FALLBACK_HOLDER_DAMAGE_DROP_DENOMINATOR = 100;
+    private static final int FALLBACK_DISCONNECT_PENALTY_DURATION_TICKS = 2400;
     private static final double FALLBACK_ROPE_CORRECTION_RATE = 0.35D;
     private static final double FALLBACK_ROPE_MAX_PULL_SPEED = 0.45D;
     private static final double FALLBACK_ROPE_EMERGENCY_STRETCH_MULTIPLIER = 2.5D;
@@ -281,6 +282,42 @@ public final class RopeConfig {
         return data.persistRopes;
     }
 
+    public static boolean refundLeadToControllerOnTargetDisconnect() {
+        return data.refundLeadToControllerOnTargetDisconnect;
+    }
+
+    public static boolean enableDisconnectPenalty() {
+        return data.enableDisconnectPenalty;
+    }
+
+    public static boolean persistDisconnectPenalties() {
+        return data.persistDisconnectPenalties;
+    }
+
+    public static boolean disconnectPenaltyOnlyLeadCreatedRopes() {
+        return data.disconnectPenaltyOnlyLeadCreatedRopes;
+    }
+
+    public static int disconnectPenaltyDurationTicks() {
+        return Math.max(0, data.disconnectPenaltyDurationTicks);
+    }
+
+    public static int disconnectPenaltyMiningFatigueLevel() {
+        return Math.max(0, data.disconnectPenaltyMiningFatigueLevel);
+    }
+
+    public static int disconnectPenaltySlownessLevel() {
+        return Math.max(0, data.disconnectPenaltySlownessLevel);
+    }
+
+    public static boolean disconnectPenaltyShowParticles() {
+        return data.disconnectPenaltyShowParticles;
+    }
+
+    public static boolean disconnectPenaltyShowIcon() {
+        return data.disconnectPenaltyShowIcon;
+    }
+
     public static boolean isProtectedPlayer(ServerPlayerEntity player) {
         String uuid = player.getUuidAsString();
         String name = player.getName().getString();
@@ -374,6 +411,15 @@ public final class RopeConfig {
         int maxHeldDurationTicks = 0;
         double spawnProtectionRadius = 0.0D;
         boolean persistRopes = false;
+        boolean refundLeadToControllerOnTargetDisconnect = true;
+        boolean enableDisconnectPenalty = true;
+        boolean persistDisconnectPenalties = true;
+        boolean disconnectPenaltyOnlyLeadCreatedRopes = true;
+        int disconnectPenaltyDurationTicks = FALLBACK_DISCONNECT_PENALTY_DURATION_TICKS;
+        int disconnectPenaltyMiningFatigueLevel = 1;
+        int disconnectPenaltySlownessLevel = 1;
+        boolean disconnectPenaltyShowParticles = true;
+        boolean disconnectPenaltyShowIcon = true;
         List<String> protectedPlayerNames = List.of();
         List<String> protectedPlayerIds = List.of();
 
@@ -433,6 +479,9 @@ public final class RopeConfig {
             ropeVisualWidthPreset = normalizeWidthPreset(ropeVisualWidthPreset);
             maxHeldDurationTicks = Math.max(0, maxHeldDurationTicks);
             spawnProtectionRadius = sanitizeNonNegative(spawnProtectionRadius, 0.0D);
+            disconnectPenaltyDurationTicks = Math.max(0, disconnectPenaltyDurationTicks);
+            disconnectPenaltyMiningFatigueLevel = Math.max(0, disconnectPenaltyMiningFatigueLevel);
+            disconnectPenaltySlownessLevel = Math.max(0, disconnectPenaltySlownessLevel);
             if (anchorBlockIds == null || anchorBlockIds.isEmpty()) {
                 anchorBlockIds = DEFAULT_ANCHOR_BLOCKS;
             }

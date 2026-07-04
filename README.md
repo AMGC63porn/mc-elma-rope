@@ -27,6 +27,8 @@ rope visual renderer.
 - Protect selected players and optionally disable binding near spawn.
 - Optionally persist rope state across restart and restore it when endpoint
   players rejoin.
+- Return a lead to the controller when a tied target disconnects, and apply
+  configurable reconnect penalties to discourage disconnect abuse.
 - Log rope lifecycle events for moderation when enabled.
 - Keep all core state server-side and tick only active rope links.
 
@@ -69,8 +71,14 @@ default, and cancels when the tied player moves too much or takes damage. Server
 owners can change guarded or taut escape attempts from "paused/canceled" to
 "very slow" through config.
 
-Automatic cleanup from disconnect, death, spectator mode, dimension mismatch,
-or admin clear does not refund leads.
+Automatic cleanup from death, spectator mode, dimension mismatch, or admin clear
+does not refund leads. Disconnect cleanup can optionally return one lead to the
+controller when the tied target disconnects from a lead-created rope.
+
+By default, a tied target who disconnects is marked for a reconnect penalty.
+When they return, they receive 2 minutes of Mining Fatigue I and Slowness I.
+Server owners can disable this, change effect levels, change duration, or
+disable persistence of pending penalties.
 
 ## Commands
 
@@ -118,6 +126,15 @@ Important defaults:
 - `protectedPlayerIds`: `[]`
 - `logRopeEvents`: `true`
 - `persistRopes`: `false`
+- `refundLeadToControllerOnTargetDisconnect`: `true`
+- `enableDisconnectPenalty`: `true`
+- `persistDisconnectPenalties`: `true`
+- `disconnectPenaltyOnlyLeadCreatedRopes`: `true`
+- `disconnectPenaltyDurationTicks`: `2400`
+- `disconnectPenaltyMiningFatigueLevel`: `1`
+- `disconnectPenaltySlownessLevel`: `1`
+- `disconnectPenaltyShowParticles`: `true`
+- `disconnectPenaltyShowIcon`: `true`
 - `enableActionFeedbackEffects`: `true`
 - `enableActionFeedbackSounds`: `true`
 - `ropeVisualEnabled`: `true`
@@ -146,6 +163,9 @@ When `persistRopes` is enabled, rope state is saved into the world folder as
 `mc_elma_rope_state.json`. Player-player ropes restore only after the required
 players are online again. Normal disconnect cleanup during gameplay still
 removes active ropes and does not refund leads.
+
+When `persistDisconnectPenalties` is enabled, pending reconnect penalties are
+saved into the world folder as `mc_elma_rope_disconnect_penalties.json`.
 
 ## Compatibility
 
@@ -179,7 +199,7 @@ Successful builds verify the release jar metadata and copy the remapped mod jar
 into the workspace release folder:
 
 ```text
-fabric-mod-dev/release/mc_elma_rope-0.3.0.jar
+fabric-mod-dev/release/mc_elma_rope-0.3.1.jar
 ```
 
 ## License

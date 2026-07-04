@@ -22,7 +22,7 @@ The build runs `verifyReleaseJar`, which checks:
 
 - Start a Fabric dedicated server for Minecraft `1.21.10`.
 - Install Fabric API `0.138.4+1.21.10`.
-- Install `mc_elma_rope-0.3.0.jar` on the server.
+- Install `mc_elma_rope-0.3.1.jar` on the server.
 - Confirm startup creates or reads `config/mc_elma_rope.json`.
 - Confirm no client-only classloading crash occurs.
 
@@ -66,7 +66,15 @@ The build runs `verifyReleaseJar`, which checks:
 
 ## Lifecycle
 
-- Disconnect clears active ropes and does not refund leads.
+- Disconnect clears active ropes.
+- Tied target disconnect returns one lead to the controller when
+  `refundLeadToControllerOnTargetDisconnect=true`.
+- Controller disconnect does not punish the tied target.
+- Tied target reconnect receives Mining Fatigue I and Slowness I for 2 minutes
+  with default penalty settings.
+- `enableDisconnectPenalty=false` prevents reconnect penalty application.
+- `persistDisconnectPenalties=true` preserves pending penalties through server
+  restart.
 - Death clears active ropes and does not refund leads.
 - Spectator mode clears active ropes and does not refund leads.
 - Dimension or portal mismatch clears active ropes and does not refund leads.

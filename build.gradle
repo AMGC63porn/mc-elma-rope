@@ -70,6 +70,7 @@ tasks.register('verifyReleaseJar') {
                     'com/mcelma/rope/RopeActionManager.class',
                     'com/mcelma/rope/RopePhysics.class',
                     'com/mcelma/rope/RopePersistence.class',
+                    'com/mcelma/rope/RopeDisconnectPolicy.class',
                     'com/mcelma/rope/client/McElmaRopeClient.class'
             ].each { entryName ->
                 if (zip.getEntry(entryName) == null) {

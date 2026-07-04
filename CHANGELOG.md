@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.1 - Disconnect Abuse Penalty
+
+- Added configurable lead refund to the controller when a tied target
+  disconnects from a lead-created rope.
+- Added configurable reconnect penalties for tied targets who disconnect.
+- Default reconnect penalty is 2 minutes of Mining Fatigue I and Slowness I.
+- Added world-local persistence for pending disconnect penalties.
+- Added `/mcelmarope config` output for disconnect refund and penalty settings.
+- Bumped mod version to `0.3.1`.
+
 ## 0.3.0 - State, Safety, and Release Quality
 
 - Added opt-in rope state persistence with world-local JSON storage and

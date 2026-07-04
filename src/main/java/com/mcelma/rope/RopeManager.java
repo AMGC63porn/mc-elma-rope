@@ -187,7 +187,11 @@ public final class RopeManager {
     }
 
     public int removeForPlayer(MinecraftServer server, UUID playerUuid, String message) {
-        int removed = 0;
+        return removeLinksForPlayer(server, playerUuid, message).size();
+    }
+
+    public List<RopeLink> removeLinksForPlayer(MinecraftServer server, UUID playerUuid, String message) {
+        List<RopeLink> removed = new ArrayList<>();
         Iterator<RopeLink> iterator = activeLinks.iterator();
         while (iterator.hasNext()) {
             RopeLink link = iterator.next();
@@ -196,14 +200,14 @@ public final class RopeManager {
             }
 
             iterator.remove();
-            removed++;
+            removed.add(link);
             if (server != null && message != null) {
                 notifyEndpoint(server, link.first(), message);
                 notifyEndpoint(server, link.second(), message);
             }
         }
-        if (removed > 0) {
-            log("Removed {} rope link(s) for player {}", removed, playerUuid);
+        if (!removed.isEmpty()) {
+            log("Removed {} rope link(s) for player {}", removed.size(), playerUuid);
         }
         return removed;
     }

@@ -39,6 +39,10 @@ the player interaction item.
 - `persistRopes` is disabled by default. When enabled, active links are saved to
   `mc_elma_rope_state.json` in the world folder and restored when required
   endpoint players are online again.
+- If a tied target disconnects from a lead-created rope, the controller can
+  receive one lead back and the target can receive configurable reconnect
+  penalties. Pending penalties can persist in
+  `mc_elma_rope_disconnect_penalties.json`.
 - Rope links are removed when a player disconnects, dies, becomes spectator, or
   leaves the rope endpoint world. Automatic removal does not refund leads.
 
@@ -47,7 +51,7 @@ the player interaction item.
 - Built successfully with Eclipse Adoptium JDK 21.0.11 and Gradle 9.6.1.
 - `./gradlew build` now also runs `verifyReleaseJar`, which checks release jar
   metadata and required classes.
-- The release jar is copied to `fabric-mod-dev/release/mc_elma_rope-0.3.0.jar`.
+- The release jar is copied to `fabric-mod-dev/release/mc_elma_rope-0.3.1.jar`.
 
 ## Follow-Up Candidates
 
