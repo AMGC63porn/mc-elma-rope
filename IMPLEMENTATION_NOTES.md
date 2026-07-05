@@ -63,7 +63,7 @@ the player interaction item.
   metadata, required classes, and the GameTest entrypoint.
 - `scripts/run-headless-gametests.sh` runs the Fabric GameTest suite in a
   headless server and writes an XML report under `build/gametest-results/`.
-- The release jar is copied to `fabric-mod-dev/release/mc_elma_rope-0.3.11.jar`.
+- The release jar is copied to `fabric-mod-dev/release/mc_elma_rope-0.3.12.jar`.
 - A local Fabric dedicated server dev-runtime smoke test has booted
   `mc_elma_rope 0.3.10`; see `SERVER_SMOKE_REPORT.md`.
 

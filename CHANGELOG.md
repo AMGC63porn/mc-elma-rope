@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.12 - Moderation GameTest Coverage
 
 - Added Fabric GameTest coverage for disabling third-party rescue.
 - Added Fabric GameTest coverage for spawn-protected bind denial.
@@ -8,6 +8,8 @@
 - Added Fabric GameTest coverage for physics preset overrides and holder damage
   type filters.
 - Added Fabric GameTest coverage for `maxHeldDurationTicks` rope expiration.
+- Verified the full 32-test Fabric GameTest suite in a headless server run.
+- Bumped mod version to `0.3.12`.
 
 ## 0.3.11 - Headless GameTest Validation
 
