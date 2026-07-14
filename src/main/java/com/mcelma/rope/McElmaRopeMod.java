@@ -21,17 +21,21 @@ public final class McElmaRopeMod implements ModInitializer {
         RopeConfig.load();
         RopeInteractionHandler.register(actionManager);
         RopeDamageHandler.register(ropeManager, actionManager);
+        RopeAnchorBlockBreakHandler.register(ropeManager);
         RopeCommands.register(ropeManager);
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             RopePersistence.loadPending(server, ropeManager);
+            RopeAnchoredOfflinePersistence.load(server);
             RopeDisconnectPolicy.load(server);
         });
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
             RopePersistence.save(server, ropeManager);
+            RopeAnchoredOfflinePersistence.save(server);
             RopeDisconnectPolicy.save(server);
         });
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             RopePersistence.restoreAvailable(server, ropeManager);
+            RopeAnchoredOfflinePersistence.restoreForPlayer(server, ropeManager, handler.player);
             RopeDisconnectPolicy.handleJoin(server, handler.player);
         });
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->

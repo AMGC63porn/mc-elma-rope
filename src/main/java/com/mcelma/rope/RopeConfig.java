@@ -53,6 +53,7 @@ public final class RopeConfig {
     private static final int FALLBACK_ROPE_VISUAL_SEGMENTS = 20;
     private static final double FALLBACK_ROPE_VISUAL_SAG = 0.045D;
     private static final String FALLBACK_ROPE_VISUAL_WIDTH_PRESET = "balanced";
+    private static final String FALLBACK_ROPE_VISUAL_STYLE = "vanilla_like";
     private static final double TAUT_TOLERANCE = 0.03D;
     private static final int COMMAND_PERMISSION_LEVEL = 2;
     private static final int MAX_ACTIVE_LINKS = 256;
@@ -273,6 +274,10 @@ public final class RopeConfig {
         return data.ropeVisualWidthPreset;
     }
 
+    public static String ropeVisualStyle() {
+        return data.ropeVisualStyle;
+    }
+
     public static boolean enableActionFeedbackEffects() {
         return data.enableActionFeedbackEffects;
     }
@@ -295,6 +300,10 @@ public final class RopeConfig {
 
     public static boolean persistRopes() {
         return data.persistRopes;
+    }
+
+    public static boolean persistAnchoredRopesOnDisconnect() {
+        return data.persistAnchoredRopesOnDisconnect;
     }
 
     public static boolean refundLeadToControllerOnTargetDisconnect() {
@@ -420,12 +429,14 @@ public final class RopeConfig {
         int ropeVisualSegments = FALLBACK_ROPE_VISUAL_SEGMENTS;
         double ropeVisualSag = FALLBACK_ROPE_VISUAL_SAG;
         String ropeVisualWidthPreset = FALLBACK_ROPE_VISUAL_WIDTH_PRESET;
+        String ropeVisualStyle = FALLBACK_ROPE_VISUAL_STYLE;
         boolean enableActionFeedbackEffects = true;
         boolean enableActionFeedbackSounds = true;
         boolean logRopeEvents = true;
         int maxHeldDurationTicks = 0;
         double spawnProtectionRadius = 0.0D;
         boolean persistRopes = false;
+        boolean persistAnchoredRopesOnDisconnect = true;
         boolean refundLeadToControllerOnTargetDisconnect = true;
         boolean enableDisconnectPenalty = true;
         boolean persistDisconnectPenalties = true;
@@ -492,6 +503,7 @@ public final class RopeConfig {
             ropeVisualSegments = clamp(ropeVisualSegments, 4, 64);
             ropeVisualSag = sanitizeRange(ropeVisualSag, 0.0D, 0.25D, FALLBACK_ROPE_VISUAL_SAG);
             ropeVisualWidthPreset = normalizeWidthPreset(ropeVisualWidthPreset);
+            ropeVisualStyle = normalizeVisualStyle(ropeVisualStyle);
             maxHeldDurationTicks = Math.max(0, maxHeldDurationTicks);
             spawnProtectionRadius = sanitizeNonNegative(spawnProtectionRadius, 0.0D);
             disconnectPenaltyDurationTicks = Math.max(0, disconnectPenaltyDurationTicks);
@@ -553,6 +565,17 @@ public final class RopeConfig {
             return switch (normalized) {
                 case "custom", "soft", "balanced", "strict" -> normalized;
                 default -> FALLBACK_ROPE_PHYSICS_PRESET;
+            };
+        }
+
+        private static String normalizeVisualStyle(String value) {
+            if (value == null) {
+                return FALLBACK_ROPE_VISUAL_STYLE;
+            }
+            String normalized = value.toLowerCase(java.util.Locale.ROOT);
+            return switch (normalized) {
+                case "vanilla_like", "layered_lines" -> normalized;
+                default -> FALLBACK_ROPE_VISUAL_STYLE;
             };
         }
 

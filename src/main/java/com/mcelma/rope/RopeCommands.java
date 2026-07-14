@@ -108,13 +108,14 @@ public final class RopeCommands {
     }
 
     private static int clearAll(RopeManager ropeManager, ServerCommandSource source) {
-        int removed = ropeManager.clearAll();
+        int removed = ropeManager.clearAll() + RopeAnchoredOfflinePersistence.clearAll(source.getServer());
         source.sendFeedback(() -> Text.literal("Cleared " + removed + " rope link(s)."), true);
         return removed;
     }
 
     private static int clearPlayer(RopeManager ropeManager, ServerCommandSource source, ServerPlayerEntity player) {
-        int removed = ropeManager.removeForPlayer(player.getUuid());
+        int removed = ropeManager.removeForPlayer(player.getUuid())
+                + RopeAnchoredOfflinePersistence.clearForPlayer(source.getServer(), player.getUuid());
         source.sendFeedback(() -> Text.literal("Cleared " + removed + " rope link(s) for "
                 + player.getName().getString() + "."), true);
         return removed;
@@ -211,12 +212,15 @@ public final class RopeCommands {
                 + ", fatigue/slowness="
                 + RopeConfig.disconnectPenaltyMiningFatigueLevel()
                 + "/" + RopeConfig.disconnectPenaltySlownessLevel()
-                + ", persist penalties=" + RopeConfig.persistDisconnectPenalties() + "."), false);
+                + ", persist penalties=" + RopeConfig.persistDisconnectPenalties()
+                + ", persist anchored disconnects="
+                + RopeConfig.persistAnchoredRopesOnDisconnect() + "."), false);
         source.sendFeedback(() -> Text.literal(prefix + ": permission=" + RopeConfig.commandPermissionLevel()
                 + ", maxLinks=" + RopeConfig.maxActiveLinks()
                 + ", maxHeld=" + formatOptionalTicks(RopeConfig.maxHeldDurationTicks())
                 + ", spawnProtection=" + RopeConfig.spawnProtectionRadius()
                 + ", visual=" + RopeConfig.ropeVisualEnabled()
+                + "/" + RopeConfig.ropeVisualStyle()
                 + "/" + RopeConfig.ropeVisualWidthPreset()
                 + "/" + RopeConfig.ropeVisualSegments()
                 + ", particles=" + RopeConfig.enableActionFeedbackEffects()

@@ -68,6 +68,8 @@ tasks.register('verifyReleaseJar') {
                     'com/mcelma/rope/McElmaRopeMod.class',
                     'com/mcelma/rope/RopeManager.class',
                     'com/mcelma/rope/RopeActionManager.class',
+                    'com/mcelma/rope/RopeAnchorBlockBreakHandler.class',
+                    'com/mcelma/rope/RopeAnchoredOfflinePersistence.class',
                     'com/mcelma/rope/RopePhysics.class',
                     'com/mcelma/rope/RopePersistence.class',
                     'com/mcelma/rope/RopeActionGameTests.class',
@@ -204,7 +206,9 @@ tasks.register('verifyGameplayInvariants') {
                 'FALLBACK_HOLDER_DAMAGE_DROP_DENOMINATOR = 100',
                 'FALLBACK_DISCONNECT_PENALTY_DURATION_TICKS = 2400',
                 'MAX_ACTIVE_LINKS = 256',
-                'FALLBACK_ROPE_PHYSICS_PRESET = "custom"'
+                'FALLBACK_ROPE_PHYSICS_PRESET = "custom"',
+                'FALLBACK_ROPE_VISUAL_STYLE = "vanilla_like"',
+                'boolean persistAnchoredRopesOnDisconnect = true'
         ].each { expected ->
             requireInvariant(config.contains(expected), "Missing or changed gameplay default: ${expected}")
         }

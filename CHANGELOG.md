@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.4.0-beta.1 - Vanilla-Like Rope Visuals and Anchored Disconnect Persistence
+
+- Replaced the default three-line rope visual style with a vanilla-like
+  procedural braided rope renderer.
+- Added `ropeVisualStyle` config with `vanilla_like` as the default and
+  `layered_lines` as the legacy fallback style.
+- Added `persistAnchoredRopesOnDisconnect`, enabled by default.
+- Anchored targets who disconnect are stored as offline anchored rope records
+  instead of receiving a lead refund.
+- Offline anchored ropes restore when the tied player rejoins in the anchor
+  world and the anchor block is still valid.
+- Breaking the anchor block now clears both active anchored ropes and offline
+  anchored rope records.
+- Added Fabric GameTest coverage for anchored disconnect restore, no lead
+  refund, reconnect penalty, broken offline anchor cleanup, and invalid anchor
+  restore rejection.
+- Verified the full 36-test Fabric GameTest suite in a headless server run.
+- Bumped mod version to `0.4.0-beta.1`.
+
+## 0.3.13 - Anchor Break Cleanup
+
+- Added server-side anchor block break handling for anchored ropes.
+- Breaking the exact anchor block now releases matching anchored rope links
+  without refunding leads.
+- Added Fabric GameTest coverage proving broken-anchor cleanup removes only
+  matching anchored ropes and leaves other anchors intact.
+- Verified the full 33-test Fabric GameTest suite in a headless server run.
+- Bumped mod version to `0.3.13`.
+
 ## 0.3.12 - Moderation GameTest Coverage
 
 - Added Fabric GameTest coverage for disabling third-party rescue.

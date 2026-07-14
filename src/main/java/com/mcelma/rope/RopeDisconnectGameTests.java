@@ -1,12 +1,15 @@
 package com.mcelma.rope;
 
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.TestContext;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameMode;
 
 public final class RopeDisconnectGameTests {
@@ -107,6 +110,144 @@ public final class RopeDisconnectGameTests {
         context.assertEquals(0, manager.activeCount(), Text.literal("Target disconnect did not clear the rope."));
         context.assertEquals(0, RopeDisconnectPolicy.pendingPenaltyCountForTests(),
                 Text.literal("Command-created rope should not queue a reconnect penalty by default."));
+        context.complete();
+    }
+
+    @GameTest(maxTicks = 20)
+    public void anchoredTargetDisconnectPersistsWithoutLeadRefundAndRestores(TestContext context) {
+        RopeConfig.resetForTests();
+        RopeDisconnectPolicy.clearPendingPenaltiesForTests();
+        RopeAnchoredOfflinePersistence.clearForTests(context.getWorld().getServer());
+        context.addFinalTask(() -> {
+            RopeConfig.resetForTests();
+            RopeDisconnectPolicy.clearPendingPenaltiesForTests();
+            RopeAnchoredOfflinePersistence.clearForTests(context.getWorld().getServer());
+        });
+
+        RopeManager manager = new RopeManager();
+        ServerPlayerEntity controller = context.createMockCreativeServerPlayerInWorld();
+        ServerPlayerEntity target = context.createMockCreativeServerPlayerInWorld();
+        makeSurvival(controller);
+        BlockPos anchorPos = new BlockPos(1, 1, 1);
+        context.setBlockState(anchorPos, Blocks.OAK_FENCE);
+        Vec3d anchor = Vec3d.ofCenter(context.getAbsolutePos(anchorPos));
+
+        context.assertEquals(
+                RopeManager.AddResult.ADDED,
+                manager.addPlayerLink(controller, target, RopeConfig.defaultPlayerRopeLength(), true),
+                Text.literal("Lead-created player rope was not added."));
+        context.assertEquals(
+                RopeManager.AddResult.ADDED,
+                manager.anchorCarriedPlayer(controller, anchor),
+                Text.literal("Player rope did not convert to anchored rope."));
+
+        RopeDisconnectPolicy.handleDisconnect(context.getWorld().getServer(), target, manager);
+
+        context.assertEquals(0, manager.activeCount(), Text.literal("Anchored disconnect kept active rope online."));
+        context.assertEquals(1, RopeAnchoredOfflinePersistence.pendingCountForTests(),
+                Text.literal("Anchored disconnect did not store an offline anchor record."));
+        context.assertEquals(0, countLeads(controller), Text.literal("Anchored disconnect refunded a lead."));
+        context.assertEquals(1, RopeDisconnectPolicy.pendingPenaltyCountForTests(),
+                Text.literal("Anchored disconnect did not queue the reconnect penalty."));
+
+        context.assertEquals(
+                1,
+                RopeAnchoredOfflinePersistence.restoreForPlayer(context.getWorld().getServer(), manager, target),
+                Text.literal("Anchored offline rope did not restore on join."));
+        context.assertEquals(1, manager.activeCount(), Text.literal("Restored anchored rope was not active."));
+        context.assertEquals(0, RopeAnchoredOfflinePersistence.pendingCountForTests(),
+                Text.literal("Restored anchored rope left stale offline state."));
+        context.assertTrue(manager.findForAnchor(context.getWorld().getRegistryKey(), anchor).isPresent(),
+                Text.literal("Restored anchored rope did not target the original anchor."));
+
+        RopeDisconnectPolicy.handleJoin(context.getWorld().getServer(), target);
+        context.assertTrue(target.hasStatusEffect(StatusEffects.MINING_FATIGUE),
+                Text.literal("Anchored reconnect penalty did not apply Mining Fatigue."));
+        context.assertTrue(target.hasStatusEffect(StatusEffects.SLOWNESS),
+                Text.literal("Anchored reconnect penalty did not apply Slowness."));
+        context.complete();
+    }
+
+    @GameTest(maxTicks = 20)
+    public void brokenAnchorClearsOfflineAnchoredRecord(TestContext context) {
+        RopeConfig.resetForTests();
+        RopeDisconnectPolicy.clearPendingPenaltiesForTests();
+        RopeAnchoredOfflinePersistence.clearForTests(context.getWorld().getServer());
+        context.addFinalTask(() -> {
+            RopeConfig.resetForTests();
+            RopeDisconnectPolicy.clearPendingPenaltiesForTests();
+            RopeAnchoredOfflinePersistence.clearForTests(context.getWorld().getServer());
+        });
+
+        RopeManager manager = new RopeManager();
+        ServerPlayerEntity controller = context.createMockCreativeServerPlayerInWorld();
+        ServerPlayerEntity target = context.createMockCreativeServerPlayerInWorld();
+        BlockPos anchorPos = new BlockPos(1, 1, 1);
+        context.setBlockState(anchorPos, Blocks.OAK_FENCE);
+        Vec3d anchor = Vec3d.ofCenter(context.getAbsolutePos(anchorPos));
+
+        context.assertEquals(
+                RopeManager.AddResult.ADDED,
+                manager.addPlayerLink(controller, target, RopeConfig.defaultPlayerRopeLength(), true),
+                Text.literal("Lead-created player rope was not added."));
+        context.assertEquals(
+                RopeManager.AddResult.ADDED,
+                manager.anchorCarriedPlayer(controller, anchor),
+                Text.literal("Player rope did not convert to anchored rope."));
+
+        RopeDisconnectPolicy.handleDisconnect(context.getWorld().getServer(), target, manager);
+        context.assertEquals(1, RopeAnchoredOfflinePersistence.pendingCountForTests(),
+                Text.literal("Anchored disconnect did not store an offline anchor record."));
+
+        context.assertEquals(
+                1,
+                RopeAnchoredOfflinePersistence.removeForAnchor(
+                        context.getWorld().getServer(),
+                        context.getWorld().getRegistryKey(),
+                        anchor),
+                Text.literal("Broken anchor did not remove the offline anchored record."));
+        context.assertEquals(0, RopeAnchoredOfflinePersistence.pendingCountForTests(),
+                Text.literal("Broken anchor left stale offline anchored state."));
+        context.complete();
+    }
+
+    @GameTest(maxTicks = 20)
+    public void invalidOfflineAnchorDoesNotRestore(TestContext context) {
+        RopeConfig.resetForTests();
+        RopeDisconnectPolicy.clearPendingPenaltiesForTests();
+        RopeAnchoredOfflinePersistence.clearForTests(context.getWorld().getServer());
+        context.addFinalTask(() -> {
+            RopeConfig.resetForTests();
+            RopeDisconnectPolicy.clearPendingPenaltiesForTests();
+            RopeAnchoredOfflinePersistence.clearForTests(context.getWorld().getServer());
+        });
+
+        RopeManager manager = new RopeManager();
+        ServerPlayerEntity controller = context.createMockCreativeServerPlayerInWorld();
+        ServerPlayerEntity target = context.createMockCreativeServerPlayerInWorld();
+        BlockPos anchorPos = new BlockPos(1, 1, 1);
+        context.setBlockState(anchorPos, Blocks.OAK_FENCE);
+        Vec3d anchor = Vec3d.ofCenter(context.getAbsolutePos(anchorPos));
+
+        context.assertEquals(
+                RopeManager.AddResult.ADDED,
+                manager.addPlayerLink(controller, target, RopeConfig.defaultPlayerRopeLength(), true),
+                Text.literal("Lead-created player rope was not added."));
+        context.assertEquals(
+                RopeManager.AddResult.ADDED,
+                manager.anchorCarriedPlayer(controller, anchor),
+                Text.literal("Player rope did not convert to anchored rope."));
+
+        RopeDisconnectPolicy.handleDisconnect(context.getWorld().getServer(), target, manager);
+        context.setBlockState(anchorPos, Blocks.AIR);
+
+        context.assertEquals(
+                0,
+                RopeAnchoredOfflinePersistence.restoreForPlayer(context.getWorld().getServer(), manager, target),
+                Text.literal("Invalid offline anchor restored unexpectedly."));
+        context.assertEquals(0, manager.activeCount(), Text.literal("Invalid anchor restore created an active rope."));
+        context.assertEquals(0, RopeAnchoredOfflinePersistence.pendingCountForTests(),
+                Text.literal("Invalid offline anchor record was not dropped."));
         context.complete();
     }
 
