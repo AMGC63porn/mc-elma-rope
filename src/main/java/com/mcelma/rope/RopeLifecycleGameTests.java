@@ -1,5 +1,7 @@
 package com.mcelma.rope;
 
+import java.util.List;
+
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.test.TestContext;
@@ -58,6 +60,37 @@ public final class RopeLifecycleGameTests {
                 manager.releaseAnchorForController(controller, anchor).status(),
                 Text.literal("Controller could not release anchored rope."));
         context.assertEquals(0, manager.activeCount(), Text.literal("Anchor release did not remove the rope."));
+        context.complete();
+    }
+
+    @GameTest(maxTicks = 20)
+    public void brokenAnchorClearsOnlyMatchingAnchoredRope(TestContext context) {
+        RopeManager manager = new RopeManager();
+        ServerPlayerEntity firstPlayer = context.createMockCreativeServerPlayerInWorld();
+        ServerPlayerEntity secondPlayer = context.createMockCreativeServerPlayerInWorld();
+        Vec3d brokenAnchor = Vec3d.ofCenter(context.getAbsolutePos(new BlockPos(1, 1, 1)));
+        Vec3d intactAnchor = Vec3d.ofCenter(context.getAbsolutePos(new BlockPos(2, 1, 1)));
+
+        context.assertEquals(
+                RopeManager.AddResult.ADDED,
+                manager.addAnchor(firstPlayer, brokenAnchor, RopeConfig.anchorRopeLength()),
+                Text.literal("First anchored rope was not added."));
+        context.assertEquals(
+                RopeManager.AddResult.ADDED,
+                manager.addAnchor(secondPlayer, intactAnchor, RopeConfig.anchorRopeLength()),
+                Text.literal("Second anchored rope was not added."));
+
+        List<RopeLink> removed = manager.removeLinksForAnchor(
+                context.getWorld().getServer(),
+                context.getWorld().getRegistryKey(),
+                brokenAnchor,
+                "The rope was released because the anchor block was broken.");
+
+        context.assertEquals(1, removed.size(), Text.literal("Broken anchor should remove exactly one rope."));
+        context.assertEquals(1, manager.activeCount(), Text.literal("Broken anchor cleanup removed unrelated ropes."));
+        context.assertTrue(
+                manager.findForAnchor(context.getWorld().getRegistryKey(), intactAnchor).isPresent(),
+                Text.literal("Intact anchor rope was removed incorrectly."));
         context.complete();
     }
 

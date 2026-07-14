@@ -17,20 +17,23 @@ rope visual renderer.
 - Keep rope physics one-way: the tied player cannot pull the controller.
 - Tie a carried player to configured anchor blocks such as fences, walls,
   chains, iron bars, lightning rods, end rods, and bells.
+- Release anchored ropes automatically when their anchor block is broken.
 - Release ropes manually with timed actions and return a lead when appropriate.
 - Allow configurable third-party rescue actions for unbound players.
 - Give tied players a difficult, low-chance self-escape attempt.
 - Let a rope slip free at a configurable low chance when the holder takes
   damage, with optional damage type allow/deny filters.
 - Render active ropes on clients that also install the mod, with smoothed
-  endpoint interpolation, configurable sag, and a thicker layered rope look.
+  endpoint interpolation, configurable sag, and a vanilla-like braided rope
+  look by default.
 - Keep optional rope visual sync cheap by avoiding active-link processing while
   no ropes exist and reusing per-world snapshots during sync.
 - Protect selected players and optionally disable binding near spawn.
 - Optionally persist rope state across restart and restore it when endpoint
   players rejoin.
-- Return a lead to the controller when a tied target disconnects, and apply
-  configurable reconnect penalties to discourage disconnect abuse.
+- Return a lead to the controller when a held player-player target disconnects,
+  while keeping anchored targets tied through reconnect when configured.
+- Apply configurable reconnect penalties to discourage disconnect abuse.
 - Log rope lifecycle events for moderation when enabled.
 - Keep all core state server-side and tick only active rope links.
 - Ship Fabric GameTest smoke coverage for config reload, manager, disconnect
@@ -76,9 +79,15 @@ default, and cancels when the tied player moves too much or takes damage. Server
 owners can change guarded or taut escape attempts from "paused/canceled" to
 "very slow" through config.
 
-Automatic cleanup from death, spectator mode, dimension mismatch, or admin clear
-does not refund leads. Disconnect cleanup can optionally return one lead to the
-controller when the tied target disconnects from a lead-created rope.
+Automatic cleanup from death, spectator mode, dimension mismatch, anchor break,
+or admin clear does not refund leads. Disconnect cleanup can optionally return
+one lead to the controller when a held player-player target disconnects from a
+lead-created rope.
+
+When an anchored target disconnects, the rope is saved as an offline anchored
+rope by default. If the player rejoins in the anchor world and the anchor block
+is still valid, they are tied back to the same anchor. This does not refund a
+lead, and the normal reconnect penalty still applies.
 
 By default, a tied target who disconnects is marked for a reconnect penalty.
 When they return, they receive 2 minutes of Mining Fatigue I and Slowness I.
@@ -131,6 +140,7 @@ Important defaults:
 - `protectedPlayerIds`: `[]`
 - `logRopeEvents`: `true`
 - `persistRopes`: `false`
+- `persistAnchoredRopesOnDisconnect`: `true`
 - `refundLeadToControllerOnTargetDisconnect`: `true`
 - `enableDisconnectPenalty`: `true`
 - `persistDisconnectPenalties`: `true`
@@ -145,6 +155,7 @@ Important defaults:
 - `ropeVisualEnabled`: `true`
 - `ropeVisualSegments`: `20`
 - `ropeVisualSag`: `0.045`
+- `ropeVisualStyle`: `vanilla_like` (`vanilla_like`, `layered_lines`)
 - `ropeVisualWidthPreset`: `balanced`
 
 Anchor entries support block ids and block tags:
@@ -167,11 +178,14 @@ Use `/mcelmarope reload` after editing the config.
 
 When `persistRopes` is enabled, rope state is saved into the world folder as
 `mc_elma_rope_state.json`. Player-player ropes restore only after the required
-players are online again. Normal disconnect cleanup during gameplay still
-removes active ropes and does not refund leads.
+players are online again. Normal held player-player disconnect cleanup during
+gameplay still removes active ropes.
 
 When `persistDisconnectPenalties` is enabled, pending reconnect penalties are
 saved into the world folder as `mc_elma_rope_disconnect_penalties.json`.
+
+When `persistAnchoredRopesOnDisconnect` is enabled, anchored disconnect state is
+saved into the world folder as `mc_elma_rope_anchored_offline.json`.
 
 ## Compatibility
 
@@ -185,8 +199,8 @@ without the optional client renderer.
 ## Known Limits
 
 - Rope state persistence is opt-in and disabled by default.
-- The visual renderer is intentionally lightweight and may be improved later
-  with textured or thicker rope rendering.
+- The visual renderer is procedural and intentionally lightweight; it imitates
+  vanilla leash visuals without making players vanilla leashable entities.
 - GameTest coverage is currently smoke-level; full multiplayer gameplay
   validation still belongs in the MC-ELMA test server protocol.
 
@@ -205,7 +219,7 @@ Successful builds verify the release jar metadata and copy the remapped mod jar
 into the workspace release folder:
 
 ```text
-fabric-mod-dev/release/mc_elma_rope-0.3.12.jar
+fabric-mod-dev/release/mc_elma_rope-0.4.0-beta.1.jar
 ```
 
 ## License

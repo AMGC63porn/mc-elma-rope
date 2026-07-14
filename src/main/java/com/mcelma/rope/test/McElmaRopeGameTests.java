@@ -22,6 +22,9 @@ public final class McElmaRopeGameTests {
         context.assertEquals(60, RopeConfig.bindDurationTicks(), Text.literal("Default bind duration changed."));
         context.assertEquals(240, RopeConfig.thirdPartyReleaseDurationTicks(), Text.literal("Third-party rescue duration changed."));
         context.assertEquals(2400, RopeConfig.disconnectPenaltyDurationTicks(), Text.literal("Disconnect penalty duration changed."));
+        context.assertEquals("vanilla_like", RopeConfig.ropeVisualStyle(), Text.literal("Default visual style changed."));
+        context.assertTrue(RopeConfig.persistAnchoredRopesOnDisconnect(),
+                Text.literal("Default anchored disconnect persistence changed."));
 
         BlockPos fencePos = new BlockPos(1, 1, 1);
         context.setBlockState(fencePos, Blocks.OAK_FENCE);

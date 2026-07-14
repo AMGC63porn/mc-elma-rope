@@ -31,20 +31,30 @@ the player interaction item.
 - Rope visuals are synced through an optional S2C payload. The server sends
   packets only to clients that advertise the visual payload channel.
 - Rope visuals include length and taut state for client-side sag/interpolation
-  only; gameplay remains server-authoritative.
+  only; gameplay remains server-authoritative. The default renderer is a
+  vanilla-like procedural braided rope; the legacy layered-line style is still
+  available through config.
 - Rope visual sync sends one empty state after links clear, skips active-link
   processing while no ropes exist, and caches visual link snapshots per world
   for each sync tick.
 - Anchor blocks are configurable by block id or block tag.
+- Anchored ropes listen for server-side anchor block break events. If the
+  stored anchor block is broken, matching anchored ropes are removed without
+  lead refund because this is automatic cleanup, not manual release.
+- Anchored target disconnects can persist as offline anchored rope records in
+  `mc_elma_rope_anchored_offline.json`. On reconnect, the rope restores only if
+  the player is in the anchor world and the anchor block is still valid.
 - Protected player lists, optional spawn protection, optional max held duration,
   damage type filters, and rope event logging are configurable moderation
   controls.
 - `persistRopes` is disabled by default. When enabled, active links are saved to
   `mc_elma_rope_state.json` in the world folder and restored when required
   endpoint players are online again.
-- If a tied target disconnects from a lead-created rope, the controller can
-  receive one lead back and the target can receive configurable reconnect
-  penalties. Pending penalties can persist in
+- If a held player-player target disconnects from a lead-created rope, the
+  controller can receive one lead back and the target can receive configurable
+  reconnect penalties. Anchored target disconnects do not refund leads because
+  the rope is still considered active through offline anchored state. Pending
+  penalties can persist in
   `mc_elma_rope_disconnect_penalties.json`.
 - Rope links are removed when a player disconnects, dies, becomes spectator, or
   leaves the rope endpoint world. Automatic removal does not refund leads.
@@ -53,7 +63,8 @@ the player interaction item.
   protection, disconnect penalty behavior, lifecycle cleanup, and one-way rope
   physics behavior, timed gameplay action behavior, and config reload
   normalization behavior, world-local rope persistence behavior, active-link
-  performance scale behavior, and disconnect refund/penalty boundaries.
+  performance scale behavior, disconnect refund/penalty boundaries, and
+  anchored offline reconnect behavior.
 
 ## Build Verification
 
@@ -63,7 +74,8 @@ the player interaction item.
   metadata, required classes, and the GameTest entrypoint.
 - `scripts/run-headless-gametests.sh` runs the Fabric GameTest suite in a
   headless server and writes an XML report under `build/gametest-results/`.
-- The release jar is copied to `fabric-mod-dev/release/mc_elma_rope-0.3.12.jar`.
+- The release jar is copied to
+  `fabric-mod-dev/release/mc_elma_rope-0.4.0-beta.1.jar`.
 - A local Fabric dedicated server dev-runtime smoke test has booted
   `mc_elma_rope 0.3.10`; see `SERVER_SMOKE_REPORT.md`.
 

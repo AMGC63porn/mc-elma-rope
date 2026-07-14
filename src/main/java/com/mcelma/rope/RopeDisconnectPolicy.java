@@ -85,7 +85,11 @@ public final class RopeDisconnectPolicy {
             if (!isDisconnectingTarget(disconnected.getUuid(), link)) {
                 continue;
             }
-            if (RopeConfig.refundLeadToControllerOnTargetDisconnect()) {
+            boolean storedAnchoredRope = RopeAnchoredOfflinePersistence.storeDisconnectedAnchoredTarget(
+                    server,
+                    disconnected,
+                    link);
+            if (!storedAnchoredRope && RopeConfig.refundLeadToControllerOnTargetDisconnect()) {
                 refundController(server, link);
             }
             if (shouldPunish(link)) {

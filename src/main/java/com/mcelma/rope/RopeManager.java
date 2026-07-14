@@ -212,6 +212,36 @@ public final class RopeManager {
         return removed;
     }
 
+    public int removeForAnchor(MinecraftServer server, RegistryKey<World> worldKey, Vec3d anchor, String message) {
+        return removeLinksForAnchor(server, worldKey, anchor, message).size();
+    }
+
+    public List<RopeLink> removeLinksForAnchor(
+            MinecraftServer server,
+            RegistryKey<World> worldKey,
+            Vec3d anchor,
+            String message) {
+        List<RopeLink> removed = new ArrayList<>();
+        Iterator<RopeLink> iterator = activeLinks.iterator();
+        while (iterator.hasNext()) {
+            RopeLink link = iterator.next();
+            if (!link.first().matchesAnchor(worldKey, anchor) && !link.second().matchesAnchor(worldKey, anchor)) {
+                continue;
+            }
+
+            iterator.remove();
+            removed.add(link);
+            if (server != null && message != null) {
+                notifyEndpoint(server, link.first(), message);
+                notifyEndpoint(server, link.second(), message);
+            }
+        }
+        if (!removed.isEmpty()) {
+            log("Removed {} rope link(s) for broken anchor {} in {}", removed.size(), anchor, worldKey.getValue());
+        }
+        return removed;
+    }
+
     public int clearAll() {
         int count = activeLinks.size();
         activeLinks.clear();

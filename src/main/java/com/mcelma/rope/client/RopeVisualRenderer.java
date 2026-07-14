@@ -22,6 +22,12 @@ public final class RopeVisualRenderer {
     private static final int CORE_R = 132;
     private static final int CORE_G = 92;
     private static final int CORE_B = 52;
+    private static final int FIBER_R = 164;
+    private static final int FIBER_G = 132;
+    private static final int FIBER_B = 82;
+    private static final int TWIST_R = 96;
+    private static final int TWIST_G = 67;
+    private static final int TWIST_B = 38;
     private static final int SHADOW_R = 62;
     private static final int SHADOW_G = 38;
     private static final int SHADOW_B = 20;
@@ -110,11 +116,61 @@ public final class RopeVisualRenderer {
         Vec3d side = sideVector(start, end, cameraPos);
         double width = widthOffset();
 
+        if ("layered_lines".equals(RopeConfig.ropeVisualStyle())) {
+            drawLayeredRope(entry, consumer, start, end, sag, side, width);
+            return;
+        }
+
+        drawVanillaLikeRope(entry, consumer, start, end, sag, side, width);
+    }
+
+    private static void drawLayeredRope(
+            MatrixStack.Entry entry,
+            VertexConsumer consumer,
+            Vec3d start,
+            Vec3d end,
+            double sag,
+            Vec3d side,
+            double width) {
         drawRopeLayer(entry, consumer, start, end, sag, side.multiply(width), SHADOW_R, SHADOW_G, SHADOW_B);
         drawRopeLayer(entry, consumer, start, end, sag, Vec3d.ZERO, CORE_R, CORE_G, CORE_B);
         if (!RopeConfig.ropeVisualWidthPreset().equals("thin")) {
             drawRopeLayer(entry, consumer, start, end, sag, side.multiply(-width * 0.55D),
                     HIGHLIGHT_R, HIGHLIGHT_G, HIGHLIGHT_B);
+        }
+    }
+
+    private static void drawVanillaLikeRope(
+            MatrixStack.Entry entry,
+            VertexConsumer consumer,
+            Vec3d start,
+            Vec3d end,
+            double sag,
+            Vec3d side,
+            double width) {
+        int segments = Math.max(12, RopeConfig.ropeVisualSegments() * 2);
+        Vec3d previousCenter = ropePoint(start, end, 0.0D, sag);
+        for (int segment = 1; segment <= segments; segment++) {
+            double t = (double) segment / segments;
+            Vec3d center = ropePoint(start, end, t, sag);
+            boolean twist = segment % 2 == 0;
+            drawSegment(entry, consumer, previousCenter, center,
+                    twist ? FIBER_R : CORE_R,
+                    twist ? FIBER_G : CORE_G,
+                    twist ? FIBER_B : CORE_B);
+
+            double previousT = (double) (segment - 1) / segments;
+            double insetStart = lerp(previousT, t, 0.22D);
+            double insetEnd = lerp(previousT, t, 0.78D);
+            Vec3d fiberStart = ropePoint(start, end, insetStart, sag)
+                    .add(side.multiply(twist ? width : -width));
+            Vec3d fiberEnd = ropePoint(start, end, insetEnd, sag)
+                    .add(side.multiply(twist ? -width : width));
+            drawSegment(entry, consumer, fiberStart, fiberEnd,
+                    twist ? HIGHLIGHT_R : TWIST_R,
+                    twist ? HIGHLIGHT_G : TWIST_G,
+                    twist ? HIGHLIGHT_B : TWIST_B);
+            previousCenter = center;
         }
     }
 

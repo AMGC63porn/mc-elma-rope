@@ -24,7 +24,9 @@ public final class RopeConfigGameTests {
                   "ropeVisualSegments": 100,
                   "ropeVisualSag": 99.0,
                   "ropeVisualWidthPreset": "wide",
+                  "ropeVisualStyle": "rainbow",
                   "ropePhysicsPreset": "nonsense",
+                  "persistAnchoredRopesOnDisconnect": false,
                   "anchorBlockIds": [
                     "minecraft:diamond_block",
                     "#minecraft:fences",
@@ -46,7 +48,11 @@ public final class RopeConfigGameTests {
         context.assertEquals(64, RopeConfig.ropeVisualSegments(), Text.literal("Visual segment clamp failed."));
         context.assertEquals(0.25D, RopeConfig.ropeVisualSag(), Text.literal("Visual sag clamp failed."));
         context.assertEquals("balanced", RopeConfig.ropeVisualWidthPreset(), Text.literal("Width preset fallback failed."));
+        context.assertEquals("vanilla_like", RopeConfig.ropeVisualStyle(),
+                Text.literal("Visual style fallback failed."));
         context.assertEquals("custom", RopeConfig.ropePhysicsPreset(), Text.literal("Physics preset fallback failed."));
+        context.assertFalse(RopeConfig.persistAnchoredRopesOnDisconnect(),
+                Text.literal("Anchored disconnect persistence did not reload."));
         context.assertEquals(1, RopeConfig.anchorBlockIdCount(), Text.literal("Anchor id reload count failed."));
         context.assertEquals(1, RopeConfig.anchorBlockTagCount(), Text.literal("Anchor tag reload count failed."));
 
@@ -73,6 +79,10 @@ public final class RopeConfigGameTests {
         context.assertEquals(48.0D, RopeConfig.maxRopeLength(), Text.literal("Malformed config did not reset max length."));
         context.assertEquals(12.0D, RopeConfig.defaultPlayerRopeLength(),
                 Text.literal("Malformed config did not reset player rope length."));
+        context.assertEquals("vanilla_like", RopeConfig.ropeVisualStyle(),
+                Text.literal("Malformed config did not reset visual style."));
+        context.assertTrue(RopeConfig.persistAnchoredRopesOnDisconnect(),
+                Text.literal("Malformed config did not reset anchored disconnect persistence."));
         context.assertEquals(3, RopeConfig.anchorBlockTagCount(),
                 Text.literal("Malformed config did not reset default anchor tags."));
         BlockPos chainPos = new BlockPos(1, 1, 1);

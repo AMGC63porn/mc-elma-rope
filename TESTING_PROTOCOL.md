@@ -38,7 +38,7 @@ The script writes an XML report to
 
 - Start a Fabric dedicated server for Minecraft `1.21.10`.
 - Install Fabric API `0.138.4+1.21.10`.
-- Install `mc_elma_rope-0.3.12.jar` on the server.
+- Install `mc_elma_rope-0.4.0-beta.1.jar` on the server.
 - Confirm startup creates or reads `config/mc_elma_rope.json`.
 - Confirm no client-only classloading crash occurs.
 
@@ -58,8 +58,13 @@ The release jar declares `com.mcelma.rope.test.McElmaRopeGameTests` under the
 - tied target disconnect penalty queue and reconnect effect application
 - controller disconnect cleanup without punishing the tied target
 - tied target disconnect lead refund to the survival-mode controller
+- anchored target disconnect persistence without lead refund
+- anchored target reconnect restore and reconnect penalty application
+- broken anchor cleanup for offline anchored rope records
+- invalid offline anchor restore rejection
 - command-created ropes not queuing reconnect penalties by default
 - controller release and anchored release permission behavior
+- broken anchor block cleanup for matching anchored ropes
 - dead and spectator endpoint cleanup
 - one-way taut rope physics and loose rope no-op behavior
 - timed bind with lead consumption
@@ -89,7 +94,8 @@ multiplayer gameplay checklist below.
 ## Optional Client Renderer
 
 - Join once without the client mod and confirm gameplay still works.
-- Join once with the client mod and confirm visible rope rendering works.
+- Join once with the client mod and confirm visible rope rendering uses the
+  default vanilla-like braided style, not the legacy three-line style.
 - Confirm visual packets do not block gameplay when the client mod is absent.
 
 ## Gameplay Smoke Tests
@@ -104,6 +110,12 @@ multiplayer gameplay checklist below.
 - Anchor binding works on fences, fence gates, walls, chains, iron bars,
   lightning rods, end rods, and bells.
 - Anchor release returns one lead on manual release when eligible.
+- Breaking the exact anchor block releases the anchored rope and does not
+  refund a lead.
+- Breaking a different anchor block does not release unrelated anchored ropes.
+- Anchor a tied player, disconnect that tied player, reconnect, and confirm the
+  rope restores to the same anchor when the anchor block still exists.
+- Confirm anchored disconnect does not return a lead to the controller.
 
 ## Self Escape
 
@@ -126,9 +138,15 @@ multiplayer gameplay checklist below.
 
 ## Lifecycle
 
-- Disconnect clears active ropes.
-- Tied target disconnect returns one lead to the controller when
+- Held player-player disconnect clears active ropes.
+- Held tied target disconnect returns one lead to the controller when
   `refundLeadToControllerOnTargetDisconnect=true`.
+- Anchored tied target disconnect stores offline anchor state when
+  `persistAnchoredRopesOnDisconnect=true`.
+- Anchored tied target reconnect restores the anchor rope and applies the
+  configured disconnect penalty.
+- Breaking an anchor while the tied player is offline clears the offline
+  anchored rope record.
 - Command-created ropes do not queue reconnect penalties when
   `disconnectPenaltyOnlyLeadCreatedRopes=true`.
 - Controller disconnect does not punish the tied target.
