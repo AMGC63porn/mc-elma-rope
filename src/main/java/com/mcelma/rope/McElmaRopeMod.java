@@ -29,6 +29,7 @@ public final class McElmaRopeMod implements ModInitializer {
             RopeDisconnectPolicy.load(server);
         });
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            RopeAnchoredOfflinePersistence.captureActiveAnchoredRopesForShutdown(server, ropeManager);
             RopePersistence.save(server, ropeManager);
             RopeAnchoredOfflinePersistence.save(server);
             RopeDisconnectPolicy.save(server);

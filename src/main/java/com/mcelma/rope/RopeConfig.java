@@ -11,6 +11,9 @@ import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.slf4j.Logger;
 
 import net.fabricmc.loader.api.FabricLoader;
@@ -82,8 +85,13 @@ public final class RopeConfig {
             saveDefault(path);
         }
 
-        try (Reader reader = Files.newBufferedReader(path)) {
-            install(GSON.fromJson(reader, ConfigData.class));
+        try {
+            JsonElement document;
+            try (Reader reader = Files.newBufferedReader(path)) {
+                document = JsonParser.parseReader(reader);
+            }
+            install(GSON.fromJson(document, ConfigData.class));
+            addMissingAnchoredPersistenceSetting(path, document);
         } catch (IOException | RuntimeException ignored) {
             LOGGER.warn("Failed to load MC-ELMA Rope config at {}. Using in-memory defaults.", path);
             install(ConfigData.defaults());
@@ -371,6 +379,25 @@ public final class RopeConfig {
             }
         } catch (IOException ignored) {
             LOGGER.warn("Failed to write default MC-ELMA Rope config at {}. Using in-memory defaults.", path);
+        }
+    }
+
+    private static void addMissingAnchoredPersistenceSetting(Path path, JsonElement document) {
+        if (!document.isJsonObject()) {
+            return;
+        }
+
+        JsonObject object = document.getAsJsonObject();
+        if (object.has("persistAnchoredRopesOnDisconnect")) {
+            return;
+        }
+
+        object.addProperty("persistAnchoredRopesOnDisconnect", data.persistAnchoredRopesOnDisconnect);
+        try (Writer writer = Files.newBufferedWriter(path)) {
+            GSON.toJson(object, writer);
+            LOGGER.info("Added persistAnchoredRopesOnDisconnect to MC-ELMA Rope config at {}.", path);
+        } catch (IOException | RuntimeException exception) {
+            LOGGER.warn("Failed to update MC-ELMA Rope config at {} with anchored persistence defaults.", path, exception);
         }
     }
 

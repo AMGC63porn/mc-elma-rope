@@ -44,6 +44,9 @@ the player interaction item.
 - Anchored target disconnects can persist as offline anchored rope records in
   `mc_elma_rope_anchored_offline.json`. On reconnect, the rope restores only if
   the player is in the anchor world and the anchor block is still valid.
+- During an orderly server shutdown, active anchored ropes are captured into
+  the same offline record format. This preserves anchored ropes through restart
+  without enabling general player-player rope persistence.
 - Protected player lists, optional spawn protection, optional max held duration,
   damage type filters, and rope event logging are configurable moderation
   controls.

@@ -6,7 +6,7 @@ test coverage are added between the larger roadmap milestones.
 
 ## Current Implementation Line
 
-- Current local version: `0.4.0-beta.1`
+- Current local version: `0.4.0-beta.2`
 - Target Minecraft: `1.21.10`
 - Target loader: Fabric
 - Fabric API: `0.138.4+1.21.10`
@@ -25,6 +25,8 @@ test coverage are added between the larger roadmap milestones.
 - Configurable disconnect refund and reconnect penalties.
 - Optional persistence for rope state and pending disconnect penalties.
 - Offline anchored rope persistence when an anchored tied player disconnects.
+- Active anchored rope capture during an orderly server shutdown, independent
+  of general player-player rope restart persistence.
 - Moderation controls: protected players, spawn protection, max held duration,
   event logging, holder damage drop filters.
 - Admin commands for bind, anchor, clear, clearall, status, inspect, list,
@@ -58,7 +60,7 @@ Status: implemented and still being hardened through 0.3.x patches.
 - Optional persistence: done.
 - Disconnect cleanup/refund/penalty: done.
 - Anchor block break cleanup: done in `0.3.13`.
-- Anchored disconnect persistence: done in `0.4.0-beta.1`.
+- Anchored disconnect and orderly restart persistence: done in `0.4.0-beta.2`.
 
 ## 0.4.0 Roadmap Status - Physics And Roleplay Balance
 
@@ -85,7 +87,7 @@ Status: partially implemented.
 
 ## Next Recommended Work
 
-- Run a real multiplayer test pass for `0.4.0-beta.1` on the MC-ELMA test
+- Run a real multiplayer test pass for `0.4.0-beta.2` on the MC-ELMA test
   server.
 - Verify anchor break cleanup in-game with fence, wall, chain, iron bars,
   lightning rod, end rod, and bell anchors.

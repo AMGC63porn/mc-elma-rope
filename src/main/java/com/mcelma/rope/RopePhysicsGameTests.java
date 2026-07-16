@@ -52,4 +52,28 @@ public final class RopePhysicsGameTests {
         context.assertEquals(targetVelocity, target.getVelocity(), Text.literal("Loose rope changed target velocity."));
         context.complete();
     }
+
+    @GameTest(maxTicks = 20)
+    public void tautAnchoredRopeKeepsTangentialSwingVelocity(TestContext context) {
+        ServerPlayerEntity target = context.createMockCreativeServerPlayerInWorld();
+        Vec3d anchor = context.getAbsolute(new Vec3d(1.0D, 8.0D, 1.0D));
+        target.refreshPositionAndAngles(context.getAbsolute(new Vec3d(1.0D, 1.0D, 1.0D)), 0.0F, 0.0F);
+        target.setVelocity(new Vec3d(0.2D, -0.1D, 0.0D));
+
+        RopeLink link = new RopeLink(
+                target.getUuid(),
+                RopeEndpoint.player(target),
+                RopeEndpoint.anchor(target.getEntityWorld().getRegistryKey(), anchor),
+                4.0D,
+                true);
+
+        context.assertTrue(RopePhysics.tick(context.getWorld().getServer(), link),
+                Text.literal("Anchored physics tick failed."));
+        context.assertTrue(link.isTaut(), Text.literal("Hanging anchor rope was not marked taut."));
+        context.assertTrue(target.getVelocity().x > 0.0D,
+                Text.literal("Anchored rope removed tangential swing velocity."));
+        context.assertEquals(0.2D * RopeConfig.ropeSwingDamping(), target.getVelocity().x,
+                Text.literal("Anchored rope did not preserve swing velocity with configured damping."));
+        context.complete();
+    }
 }

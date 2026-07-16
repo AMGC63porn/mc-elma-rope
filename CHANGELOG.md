@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.0-beta.2 - Anchored Restart Persistence
+
+- Active anchor ropes are now captured into offline anchor state during an
+  orderly server shutdown when `persistAnchoredRopesOnDisconnect=true`.
+- Anchored players restore to the same valid anchor after the server starts and
+  they reconnect, without requiring `persistRopes=true`.
+- Existing config files automatically gain the missing
+  `persistAnchoredRopesOnDisconnect` setting while preserving other values.
+- Added GameTest coverage for disk reload of anchored disconnect records,
+  orderly server shutdown capture, and preservation of tangential swing
+  velocity for hanging anchor ropes.
+- Bumped mod version to `0.4.0-beta.2`.
+
 ## 0.4.0-beta.1 - Vanilla-Like Rope Visuals and Anchored Disconnect Persistence
 
 - Replaced the default three-line rope visual style with a vanilla-like

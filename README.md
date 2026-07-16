@@ -32,7 +32,8 @@ rope visual renderer.
 - Optionally persist rope state across restart and restore it when endpoint
   players rejoin.
 - Return a lead to the controller when a held player-player target disconnects,
-  while keeping anchored targets tied through reconnect when configured.
+  while keeping anchored targets tied through reconnect and orderly server
+  restart when configured.
 - Apply configurable reconnect penalties to discourage disconnect abuse.
 - Log rope lifecycle events for moderation when enabled.
 - Keep all core state server-side and tick only active rope links.
@@ -88,6 +89,11 @@ When an anchored target disconnects, the rope is saved as an offline anchored
 rope by default. If the player rejoins in the anchor world and the anchor block
 is still valid, they are tied back to the same anchor. This does not refund a
 lead, and the normal reconnect penalty still applies.
+
+During an orderly server shutdown, active anchored ropes are also captured into
+the same offline anchor state. This keeps anchored players tied after the server
+starts again without enabling restart persistence for ordinary player-player
+ropes.
 
 By default, a tied target who disconnects is marked for a reconnect penalty.
 When they return, they receive 2 minutes of Mining Fatigue I and Slowness I.
@@ -185,7 +191,8 @@ When `persistDisconnectPenalties` is enabled, pending reconnect penalties are
 saved into the world folder as `mc_elma_rope_disconnect_penalties.json`.
 
 When `persistAnchoredRopesOnDisconnect` is enabled, anchored disconnect state is
-saved into the world folder as `mc_elma_rope_anchored_offline.json`.
+saved into the world folder as `mc_elma_rope_anchored_offline.json`. This file
+also stores active anchored ropes during an orderly server shutdown.
 
 ## Compatibility
 
@@ -219,7 +226,7 @@ Successful builds verify the release jar metadata and copy the remapped mod jar
 into the workspace release folder:
 
 ```text
-fabric-mod-dev/release/mc_elma_rope-0.4.0-beta.1.jar
+fabric-mod-dev/release/mc_elma_rope-0.4.0-beta.2.jar
 ```
 
 ## License
