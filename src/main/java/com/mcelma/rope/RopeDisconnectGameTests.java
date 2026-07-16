@@ -169,6 +169,78 @@ public final class RopeDisconnectGameTests {
     }
 
     @GameTest(maxTicks = 20)
+    public void anchoredDisconnectRecordSurvivesDiskReload(TestContext context) {
+        RopeConfig.resetForTests();
+        RopeAnchoredOfflinePersistence.clearForTests(context.getWorld().getServer());
+        context.addFinalTask(() -> {
+            RopeConfig.resetForTests();
+            RopeAnchoredOfflinePersistence.clearForTests(context.getWorld().getServer());
+        });
+
+        RopeManager manager = new RopeManager();
+        ServerPlayerEntity controller = context.createMockCreativeServerPlayerInWorld();
+        ServerPlayerEntity target = context.createMockCreativeServerPlayerInWorld();
+        BlockPos anchorPos = new BlockPos(1, 1, 1);
+        context.setBlockState(anchorPos, Blocks.OAK_FENCE);
+        Vec3d anchor = Vec3d.ofCenter(context.getAbsolutePos(anchorPos));
+
+        context.assertEquals(RopeManager.AddResult.ADDED,
+                manager.addPlayerLink(controller, target, RopeConfig.defaultPlayerRopeLength(), true),
+                Text.literal("Lead-created player rope was not added."));
+        context.assertEquals(RopeManager.AddResult.ADDED, manager.anchorCarriedPlayer(controller, anchor),
+                Text.literal("Player rope did not convert to anchored rope."));
+
+        RopeDisconnectPolicy.handleDisconnect(context.getWorld().getServer(), target, manager);
+        RopeAnchoredOfflinePersistence.load(context.getWorld().getServer());
+
+        context.assertEquals(1, RopeAnchoredOfflinePersistence.pendingCountForTests(),
+                Text.literal("Saved anchored disconnect record did not reload from disk."));
+        context.assertEquals(1,
+                RopeAnchoredOfflinePersistence.restoreForPlayer(context.getWorld().getServer(), manager, target),
+                Text.literal("Reloaded anchored disconnect record did not restore."));
+        context.assertTrue(manager.findForAnchor(context.getWorld().getRegistryKey(), anchor).isPresent(),
+                Text.literal("Reloaded record restored to the wrong anchor."));
+        context.complete();
+    }
+
+    @GameTest(maxTicks = 20)
+    public void activeAnchoredRopePersistsAcrossOrderlyServerShutdown(TestContext context) {
+        RopeConfig.resetForTests();
+        RopeAnchoredOfflinePersistence.clearForTests(context.getWorld().getServer());
+        context.addFinalTask(() -> {
+            RopeConfig.resetForTests();
+            RopeAnchoredOfflinePersistence.clearForTests(context.getWorld().getServer());
+        });
+
+        RopeManager activeManager = new RopeManager();
+        ServerPlayerEntity controller = context.createMockCreativeServerPlayerInWorld();
+        ServerPlayerEntity target = context.createMockCreativeServerPlayerInWorld();
+        BlockPos anchorPos = new BlockPos(1, 1, 1);
+        context.setBlockState(anchorPos, Blocks.OAK_FENCE);
+        Vec3d anchor = Vec3d.ofCenter(context.getAbsolutePos(anchorPos));
+
+        context.assertEquals(RopeManager.AddResult.ADDED,
+                activeManager.addPlayerLink(controller, target, RopeConfig.defaultPlayerRopeLength(), true),
+                Text.literal("Lead-created player rope was not added."));
+        context.assertEquals(RopeManager.AddResult.ADDED, activeManager.anchorCarriedPlayer(controller, anchor),
+                Text.literal("Player rope did not convert to anchored rope."));
+
+        context.assertEquals(1,
+                RopeAnchoredOfflinePersistence.captureActiveAnchoredRopesForShutdown(
+                        context.getWorld().getServer(), activeManager),
+                Text.literal("Server shutdown did not capture the active anchored rope."));
+        RopeAnchoredOfflinePersistence.load(context.getWorld().getServer());
+
+        RopeManager restartedManager = new RopeManager();
+        context.assertEquals(1,
+                RopeAnchoredOfflinePersistence.restoreForPlayer(context.getWorld().getServer(), restartedManager, target),
+                Text.literal("Shutdown-captured anchor rope did not restore after restart."));
+        context.assertTrue(restartedManager.findForAnchor(context.getWorld().getRegistryKey(), anchor).isPresent(),
+                Text.literal("Shutdown-captured rope restored to the wrong anchor."));
+        context.complete();
+    }
+
+    @GameTest(maxTicks = 20)
     public void brokenAnchorClearsOfflineAnchoredRecord(TestContext context) {
         RopeConfig.resetForTests();
         RopeDisconnectPolicy.clearPendingPenaltiesForTests();

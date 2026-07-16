@@ -88,9 +88,7 @@ public final class RopeAnchoredOfflinePersistence {
             return false;
         }
 
-        pendingAnchoredLinks.removeIf(record ->
-                disconnected.getUuidAsString().equals(record.targetUuid) || link.id().toString().equals(record.id));
-        pendingAnchoredLinks.add(OfflineAnchoredLink.from(disconnected, link, anchor));
+        storeAnchoredTarget(disconnected, link, anchor);
         save(server);
 
         if (RopeConfig.logRopeEvents()) {
@@ -99,6 +97,48 @@ public final class RopeAnchoredOfflinePersistence {
                     disconnected.getName().getString());
         }
         return true;
+    }
+
+    /**
+     * Converts active anchor ropes to offline records during an orderly server shutdown.
+     * Player-player ropes remain governed by the separate optional persistRopes setting.
+     */
+    public static int captureActiveAnchoredRopesForShutdown(MinecraftServer server, RopeManager ropeManager) {
+        if (!RopeConfig.persistAnchoredRopesOnDisconnect() || RopeConfig.persistRopes()) {
+            return 0;
+        }
+
+        int captured = 0;
+        for (RopeLink link : ropeManager.links()) {
+            if (link.hasOnlyPlayerEndpoints()) {
+                continue;
+            }
+
+            RopeEndpoint targetEndpoint = playerEndpoint(link);
+            if (targetEndpoint == null) {
+                continue;
+            }
+            RopeEndpoint anchor = link.otherEndpoint(targetEndpoint.playerUuid());
+            if (anchor == null || anchor.type() != RopeEndpoint.Type.ANCHOR) {
+                continue;
+            }
+
+            Optional<ServerPlayerEntity> target = targetEndpoint.resolvePlayer(server);
+            if (target.isEmpty()) {
+                continue;
+            }
+
+            storeAnchoredTarget(target.get(), link, anchor);
+            captured++;
+        }
+
+        if (captured > 0) {
+            save(server);
+            if (RopeConfig.logRopeEvents()) {
+                McElmaRopeMod.LOGGER.info("Captured {} active anchored rope record(s) for server shutdown.", captured);
+            }
+        }
+        return captured;
     }
 
     public static int restoreForPlayer(MinecraftServer server, RopeManager ropeManager, ServerPlayerEntity player) {
@@ -203,6 +243,22 @@ public final class RopeAnchoredOfflinePersistence {
 
     static int pendingCountForTests() {
         return pendingAnchoredLinks.size();
+    }
+
+    private static void storeAnchoredTarget(ServerPlayerEntity target, RopeLink link, RopeEndpoint anchor) {
+        pendingAnchoredLinks.removeIf(record ->
+                target.getUuidAsString().equals(record.targetUuid) || link.id().toString().equals(record.id));
+        pendingAnchoredLinks.add(OfflineAnchoredLink.from(target, link, anchor));
+    }
+
+    private static RopeEndpoint playerEndpoint(RopeLink link) {
+        if (link.first().type() == RopeEndpoint.Type.PLAYER) {
+            return link.first();
+        }
+        if (link.second().type() == RopeEndpoint.Type.PLAYER) {
+            return link.second();
+        }
+        return null;
     }
 
     private static Path statePath(MinecraftServer server) {

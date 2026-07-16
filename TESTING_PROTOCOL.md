@@ -145,6 +145,8 @@ multiplayer gameplay checklist below.
   `persistAnchoredRopesOnDisconnect=true`.
 - Anchored tied target reconnect restores the anchor rope and applies the
   configured disconnect penalty.
+- An active anchored rope is captured during an orderly server shutdown and
+  restores when the tied target reconnects after restart.
 - Breaking an anchor while the tied player is offline clears the offline
   anchored rope record.
 - Command-created ropes do not queue reconnect penalties when
